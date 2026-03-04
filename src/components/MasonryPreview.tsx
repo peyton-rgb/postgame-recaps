@@ -8,16 +8,20 @@ export function MasonryPreview({
   athletes,
   media,
   onBack,
+  onPublish,
+  publishing,
 }: {
   campaign: Campaign;
   athletes: Athlete[];
   media: Record<string, Media[]>;
   onBack: () => void;
+  onPublish: () => void;
+  publishing: boolean;
 }) {
   return (
     <div>
-      {/* Back bar */}
-      <div className="sticky top-0 z-50 px-8 py-3 border-b border-gray-800 bg-black/95 backdrop-blur-xl flex items-center justify-between">
+      {/* Sticky toolbar */}
+      <div className="sticky top-0 z-50 px-6 md:px-8 py-3 border-b border-gray-800 bg-black/95 backdrop-blur-xl flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
@@ -25,14 +29,42 @@ export function MasonryPreview({
           >
             ← Back to Editor
           </button>
-          <span className="text-sm font-bold">Preview</span>
+          <span className="text-sm font-bold text-white/50">
+            Preview &mdash; this is how clients will see it
+          </span>
         </div>
-        <span className="text-xs text-gray-600">
-          This is how clients will see it
-        </span>
+
+        <div className="flex items-center gap-3">
+          {campaign.published ? (
+            <>
+              <a
+                href={`/recap/${campaign.slug}`}
+                target="_blank"
+                className="text-[#D73F09] text-sm font-bold hover:underline"
+              >
+                View Live →
+              </a>
+              <button
+                onClick={onPublish}
+                disabled={publishing}
+                className="px-5 py-2 text-sm font-bold rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700 disabled:opacity-50"
+              >
+                {publishing ? "..." : "Unpublish"}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={onPublish}
+              disabled={publishing}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-500 disabled:opacity-50"
+            >
+              {publishing ? "Publishing..." : "Publish Recap"}
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Render the same gallery component */}
+      {/* Exact same component the public page renders */}
       <CampaignRecap campaign={campaign} athletes={athletes} media={media} />
     </div>
   );

@@ -7,7 +7,6 @@ import type { Campaign, Athlete, Media, VisibleSections } from "@/lib/types";
 import { SchoolBadge } from "@/components/SchoolBadge";
 import { ThumbnailModal } from "@/components/ThumbnailModal";
 import { MasonryPreview } from "@/components/MasonryPreview";
-import { CampaignRecap } from "@/components/CampaignRecap";
 import { parsePerformanceCSV, type ParsedAthlete } from "@/lib/csv-parser";
 import Link from "next/link";
 
@@ -78,7 +77,6 @@ export default function CampaignEditor() {
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState<string[]>([]);
   const [showPreview, setShowPreview] = useState(false);
-  const [showPublishReview, setShowPublishReview] = useState(false);
   const [pendingVideo, setPendingVideo] = useState<{ athleteId: string; file: File } | null>(null);
   const [publishing, setPublishing] = useState(false);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -331,42 +329,9 @@ export default function CampaignEditor() {
         athletes={athletes.filter((a) => selected.includes(a.id))}
         media={media}
         onBack={() => setShowPreview(false)}
+        onPublish={togglePublish}
+        publishing={publishing}
       />
-    );
-  }
-
-  // ── PUBLISH REVIEW MODE ─────────────────────────────────
-  if (showPublishReview) {
-    return (
-      <div>
-        {/* Review bar */}
-        <div className="sticky top-0 z-50 px-8 py-3 border-b border-gray-800 bg-black/95 backdrop-blur-xl flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setShowPublishReview(false)}
-              className="px-4 py-2 border border-gray-700 rounded-lg text-sm font-bold text-white hover:border-gray-500">
-              ← Back to Editor
-            </button>
-            <span className="text-sm font-bold text-yellow-400">Review Before Publishing</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => { setShowPublishReview(false); setStep(1); }}
-              className="px-4 py-2 border border-gray-700 rounded-lg text-sm font-bold text-gray-400 hover:text-white">
-              Edit Info
-            </button>
-            <button onClick={async () => { await togglePublish(); setShowPublishReview(false); }} disabled={publishing}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-bold hover:bg-green-500 disabled:opacity-50">
-              {publishing ? "Publishing..." : "Confirm & Publish"}
-            </button>
-          </div>
-        </div>
-
-        {/* Full recap preview */}
-        <CampaignRecap
-          campaign={campaign}
-          athletes={athletes.filter((a) => selected.includes(a.id))}
-          media={media}
-        />
-      </div>
     );
   }
 
@@ -401,20 +366,13 @@ export default function CampaignEditor() {
         </div>
         <div className="flex items-center gap-4">
           <span className="text-xs text-gray-500">{selected.length} posts · {uploadedCount} with media</span>
-          {campaign.published ? (
-            <>
-              <button onClick={togglePublish} disabled={publishing}
-                className="px-5 py-2 text-sm font-bold rounded-lg bg-gray-800 text-gray-400 hover:bg-gray-700">
-                {publishing ? "..." : "Unpublish"}
-              </button>
-              <a href={`/recap/${campaign.slug}`} target="_blank" className="text-[#D73F09] text-sm font-bold hover:underline">View →</a>
-            </>
-          ) : (
-            <button onClick={() => setShowPublishReview(true)}
-              className="px-5 py-2 text-sm font-bold rounded-lg bg-green-600 text-white hover:bg-green-500">
-              Review & Publish
-            </button>
+          {campaign.published && (
+            <a href={`/recap/${campaign.slug}`} target="_blank" className="text-[#D73F09] text-sm font-bold hover:underline">View Live →</a>
           )}
+          <button onClick={() => setShowPreview(true)}
+            className="px-5 py-2 text-sm font-bold rounded-lg bg-[#D73F09] text-white hover:bg-[#c43808]">
+            Preview Recap →
+          </button>
         </div>
       </div>
 
