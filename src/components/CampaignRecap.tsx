@@ -141,7 +141,20 @@ function MasonryCard({ athlete, items }: { athlete: Athlete; items: Media[] }) {
           </div>
         )}
 
-        <span className="absolute top-2 right-2 z-[3] px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider bg-black/65 text-white backdrop-blur">
+        {/* Creator overlay — top of card so it never blocks video controls */}
+        <div className="absolute top-0 left-0 right-0 z-[2] px-3 pt-2.5 pb-5 bg-gradient-to-b from-black/85 to-transparent">
+          <div className="min-w-0">
+            <div className="text-[11px] font-black uppercase text-white truncate">{athlete.name}</div>
+            <div className="text-[9px] text-white/55 font-semibold flex items-center gap-1.5">
+              {athlete.school}
+              {athlete.ig_followers ? <span className="text-white/40">· {fmt(athlete.ig_followers)}</span> : null}
+              <span className="px-1 py-px rounded text-[7px] font-bold uppercase bg-brand text-white">{athlete.sport}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Type badge — bottom-right so it doesn't overlap the top overlay */}
+        <span className="absolute bottom-2 right-2 z-[3] px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider bg-black/65 text-white backdrop-blur">
           {athlete.post_type}
         </span>
 
@@ -163,20 +176,6 @@ function MasonryCard({ athlete, items }: { athlete: Athlete; items: Media[] }) {
             {items.map((_, i) => (
               <div key={i} onClick={(e) => { e.stopPropagation(); setPlaying(false); setSlideIdx(i); }} className={`w-1.5 h-1.5 rounded-full cursor-pointer ${slideIdx === i ? "bg-white" : "bg-white/35"}`} />
             ))}
-          </div>
-        )}
-
-        {/* Bottom overlay — hidden during video playback so native controls (volume, expand) are accessible */}
-        {!playing && (
-          <div className="absolute bottom-0 left-0 right-0 z-[2] px-3 pt-5 pb-2.5 bg-gradient-to-t from-black/85 to-transparent">
-            <div className="min-w-0">
-              <div className="text-[11px] font-black uppercase text-white truncate">{athlete.name}</div>
-              <div className="text-[9px] text-white/55 font-semibold flex items-center gap-1.5">
-                {athlete.school}
-                {athlete.ig_followers ? <span className="text-white/40">· {fmt(athlete.ig_followers)}</span> : null}
-                <span className="px-1 py-px rounded text-[7px] font-bold uppercase bg-brand text-white">{athlete.sport}</span>
-              </div>
-            </div>
           </div>
         )}
       </div>
