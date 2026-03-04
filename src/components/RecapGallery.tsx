@@ -11,7 +11,7 @@ function MasonryCard({ athlete, items }: { athlete: Athlete; items: Media[] }) {
 
   const current = items[slideIdx];
   const isVideo = current?.type === "video";
-  const displaySrc = current?.thumbnail_url || current?.file_url;
+  const displaySrc = current?.thumbnail_url || (current?.type !== "video" ? current?.file_url : null);
 
   const goPrev = (e: React.MouseEvent) => {
     e.stopPropagation();

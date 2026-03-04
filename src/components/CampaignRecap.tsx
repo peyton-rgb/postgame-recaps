@@ -97,7 +97,7 @@ function MasonryCard({ athlete, items }: { athlete: Athlete; items: Media[] }) {
 
   const current = items[slideIdx];
   const isVideo = current?.type === "video";
-  const displaySrc = current?.thumbnail_url || current?.file_url;
+  const displaySrc = current?.thumbnail_url || (current?.type !== "video" ? current?.file_url : null);
 
   return (
     <div
@@ -110,6 +110,10 @@ function MasonryCard({ athlete, items }: { athlete: Athlete; items: Media[] }) {
           <video src={current.file_url} autoPlay controls playsInline className="w-full block" onEnded={() => setPlaying(false)} />
         ) : displaySrc ? (
           <img src={displaySrc} className="w-full block" draggable={false} alt={athlete.name} />
+        ) : isVideo ? (
+          <div className="w-full aspect-[4/5] bg-[#0a0a0a] flex items-center justify-center" onClick={() => setPlaying(true)}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
         ) : (
           <div className="w-full aspect-[4/5] bg-[#0a0a0a] flex items-center justify-center">
             <span className="text-[10px] text-gray-700 font-black uppercase">No media</span>

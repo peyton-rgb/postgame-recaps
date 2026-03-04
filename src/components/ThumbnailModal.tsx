@@ -17,11 +17,13 @@ export function ThumbnailModal({
   const [uploading, setUploading] = useState(false);
 
   const handleFile = (f: File | undefined) => {
-    if (!f || !f.type.startsWith("image/")) return;
+    if (!f) return;
+    // Accept any image type, including HEIC/HEIF from iOS
+    if (!f.type.startsWith("image/") && !f.name.match(/\.(jpg|jpeg|png|gif|webp|heic|heif)$/i)) return;
     setFile(f);
-    const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target?.result as string);
-    reader.readAsDataURL(f);
+    // Use object URL for faster, more reliable preview
+    const url = URL.createObjectURL(f);
+    setPreview(url);
   };
 
   const handleSubmit = async () => {

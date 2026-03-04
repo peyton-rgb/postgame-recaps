@@ -283,6 +283,7 @@ export default function CampaignEditor() {
     if (!videoUrl) return;
     const thumbPath = `${id}/${athleteId}/${Date.now()}-thumb-${thumbnailFile.name}`;
     const thumbUrl = await uploadFile(thumbnailFile, thumbPath);
+    if (!thumbUrl) { setPendingVideo(null); return; }
     const existing = media[athleteId] || [];
     const { data } = await supabase
       .from("media")
@@ -607,8 +608,16 @@ export default function CampaignEditor() {
                     onDrop={(e) => { e.preventDefault(); handleFiles(a.id, e.dataTransfer?.files); }}
                     onDragOver={(e) => e.preventDefault()}
                     className="aspect-[4/5] max-h-[300px] bg-[#0a0a0a] flex flex-col items-center justify-center gap-2 cursor-pointer relative overflow-hidden">
-                    {thumb ? <img src={thumb} className="w-full h-full object-cover" alt="" />
-                      : <span className="text-xs text-gray-600 font-bold uppercase tracking-wider">Drop files or click</span>}
+                    {thumb && !items[0]?.file_url?.match(/\.(mp4|mov|webm|avi)$/i)
+                      ? <img src={thumb} className="w-full h-full object-cover" alt="" />
+                      : thumb && items[0]?.thumbnail_url
+                        ? <img src={items[0].thumbnail_url} className="w-full h-full object-cover" alt="" />
+                        : items.length > 0
+                          ? <div className="flex flex-col items-center gap-2">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                              <span className="text-xs text-gray-600 font-bold uppercase tracking-wider">{items.length} file{items.length > 1 ? "s" : ""}</span>
+                            </div>
+                          : <span className="text-xs text-gray-600 font-bold uppercase tracking-wider">Drop files or click</span>}
                     {items.length > 1 && (
                       <div className="absolute top-2 right-2 px-2 py-1 bg-black/70 text-white text-[10px] font-bold rounded">{items.length} files</div>
                     )}
@@ -621,7 +630,9 @@ export default function CampaignEditor() {
                       {items.map((m) => (
                         <div key={m.id} className="relative flex-shrink-0">
                           <div className={`w-10 h-10 rounded overflow-hidden border-2 ${m.type === "video" ? "border-purple-500" : "border-gray-700"}`}>
-                            <img src={m.thumbnail_url || m.file_url} className="w-full h-full object-cover" alt="" />
+                            {m.type === "video" && !m.thumbnail_url
+                              ? <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+                              : <img src={m.thumbnail_url || m.file_url} className="w-full h-full object-cover" alt="" />}
                           </div>
                           <button onClick={(e) => { e.stopPropagation(); removeMedia(a.id, m.id); }}
                             className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gray-700 text-white text-[10px] flex items-center justify-center hover:bg-red-600">×</button>
