@@ -186,6 +186,7 @@ export default function CampaignEditor() {
             ig_handle: pa.ig_handle,
             ig_followers: pa.ig_followers,
             gender: pa.gender,
+            notes: pa.notes || existing.notes,
             metrics: pa.metrics,
             school: pa.school || existing.school,
             sport: pa.sport || existing.sport,
@@ -207,6 +208,7 @@ export default function CampaignEditor() {
           ig_handle: pa.ig_handle,
           ig_followers: pa.ig_followers,
           gender: pa.gender,
+          notes: pa.notes,
           metrics: pa.metrics,
           sort_order: athletes.length,
         });

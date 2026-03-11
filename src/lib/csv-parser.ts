@@ -10,6 +10,7 @@ export interface ParsedAthlete {
   school: string;
   sport: string;
   gender: string;
+  notes: string;
   metrics: AthleteMetrics;
 }
 
@@ -78,6 +79,7 @@ export function parsePerformanceCSV(csvText: string): ParsedAthlete[] {
   const iSchool = findCol(headers, "school", "university", "college");
   const iSport = findCol(headers, "sport", "sports");
   const iGender = findCol(headers, "gender", "sex");
+  const iNotes = findCol(headers, "notes", "note", "bio", "insight", "description");
 
   // IG Feed columns
   const iIgFeedUrl = findCol(headers, "ig feed post url", "ig feed url", "ig feed post", "feed url", "feed post url");
@@ -212,6 +214,7 @@ export function parsePerformanceCSV(csvText: string): ParsedAthlete[] {
       school,
       sport,
       gender: cols[cGender]?.trim() || "",
+      notes: iNotes !== -1 ? (cols[iNotes]?.trim() || "") : "",
       metrics,
     });
   }

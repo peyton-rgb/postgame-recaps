@@ -75,6 +75,7 @@ export interface Athlete {
   ig_handle?: string;
   ig_followers?: number;
   gender?: string;
+  notes?: string;
   metrics?: AthleteMetrics;
 }
 

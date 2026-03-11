@@ -6,6 +6,40 @@ import { PostgameLogo } from "./PostgameLogo";
 import { TopPerformerMedia } from "./TopPerformerMedia";
 import { SchoolBadge } from "./SchoolBadge";
 
+// ── Social Links Helper ──────────────────────────────────────
+
+function getSocialLinks(athlete: Athlete) {
+  const links: { platform: string; url: string; icon: "ig" | "tiktok" }[] = [];
+  const m = athlete.metrics || {};
+
+  // Instagram profile
+  if (athlete.ig_handle) {
+    links.push({ platform: "Instagram", url: `https://instagram.com/${athlete.ig_handle.replace("@", "")}`, icon: "ig" });
+  }
+
+  // Individual post links
+  if (m.ig_feed?.post_url) links.push({ platform: "IG Feed Post", url: m.ig_feed.post_url, icon: "ig" });
+  if (m.ig_reel?.post_url) links.push({ platform: "IG Reel", url: m.ig_reel.post_url, icon: "ig" });
+  if (m.tiktok?.post_url) links.push({ platform: "TikTok", url: m.tiktok.post_url, icon: "tiktok" });
+
+  return links;
+}
+
+function SocialIcon({ type, className = "" }: { type: "ig" | "tiktok"; className?: string }) {
+  if (type === "ig") {
+    return (
+      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+      </svg>
+    );
+  }
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48 6.34 6.34 0 001.87-4.48V8.73a8.19 8.19 0 004.71 1.49V6.79a4.85 4.85 0 01-1-.1z" />
+    </svg>
+  );
+}
+
 // ── Ranked athlete type ──────────────────────────────────────
 
 type RankedAthlete = Athlete & { bestEngRate: number };
@@ -71,6 +105,28 @@ function Top3HeroCard({
               </div>
             </div>
           </div>
+
+          {/* Notes */}
+          {athlete.notes && (
+            <p className="text-[10px] text-white/50 leading-tight mt-1.5 line-clamp-2">{athlete.notes}</p>
+          )}
+
+          {/* Social links */}
+          {(() => {
+            const links = getSocialLinks(athlete);
+            return links.length > 0 ? (
+              <div className="flex items-center gap-1.5 mt-2">
+                {links.map((link, i) => (
+                  <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                    title={link.platform}>
+                    <SocialIcon type={link.icon} className="text-white/70" />
+                    <span className="text-[8px] font-bold text-white/50">{link.platform === "Instagram" ? "Profile" : link.platform.replace("IG ", "")}</span>
+                  </a>
+                ))}
+              </div>
+            ) : null;
+          })()}
 
           {/* Metrics row */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3">
@@ -292,6 +348,7 @@ export function Top50Recap({
                   <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Impressions</th>
                   <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Engagements</th>
                   <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Eng. Rate</th>
+                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-center">Content</th>
                 </tr>
               </thead>
               <tbody>
@@ -299,6 +356,7 @@ export function Top50Recap({
                   const rank = i + 4;
                   const firstMedia = (media[a.id] || [])[0];
                   const thumbSrc = firstMedia?.thumbnail_url || (firstMedia?.type === "image" ? firstMedia?.file_url : null);
+                  const links = getSocialLinks(a);
                   return (
                     <tr key={a.id} className="border-b border-white/[0.06] hover:bg-white/[0.02]">
                       <td className="px-3 py-3 text-sm font-black text-white/30">{rank}</td>
@@ -312,6 +370,7 @@ export function Top50Recap({
                       <td className="px-3 py-3">
                         <div className="text-sm font-black uppercase">{a.name}</div>
                         {a.ig_handle && <div className="text-[10px] text-white/30">@{a.ig_handle}</div>}
+                        {a.notes && <div className="text-[10px] text-white/40 mt-0.5 max-w-[200px] truncate">{a.notes}</div>}
                       </td>
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2">
@@ -336,6 +395,24 @@ export function Top50Recap({
                       <td className="px-3 py-3 text-sm font-bold text-brand text-right">
                         {a.bestEngRate > 0 ? pct(a.bestEngRate) : "\u2014"}
                       </td>
+                      <td className="px-3 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          {links.filter(l => l.platform !== "Instagram").map((link, i) => (
+                            <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                              className="w-6 h-6 rounded flex items-center justify-center bg-white/5 hover:bg-white/15 transition-colors"
+                              title={link.platform}>
+                              <SocialIcon type={link.icon} className="text-white/50 hover:text-white" />
+                            </a>
+                          ))}
+                          {links.find(l => l.platform === "Instagram") && (
+                            <a href={links.find(l => l.platform === "Instagram")!.url} target="_blank" rel="noopener noreferrer"
+                              className="w-6 h-6 rounded flex items-center justify-center bg-white/5 hover:bg-white/15 transition-colors"
+                              title="Instagram Profile">
+                              <SocialIcon type="ig" className="text-white/50 hover:text-white" />
+                            </a>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -347,20 +424,39 @@ export function Top50Recap({
           <div className="md:hidden space-y-1">
             {rest.map((a, i) => {
               const rank = i + 4;
+              const links = getSocialLinks(a);
               return (
-                <div key={a.id} className="flex items-center gap-3 py-3 px-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                  <span className="text-sm font-black text-white/30 w-7 text-right flex-shrink-0">{rank}</span>
-                  <SchoolBadge school={a.school} size={28} />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-black uppercase truncate">{a.name}</div>
-                    <div className="text-[10px] text-white/40">{a.school} &middot; {a.sport}</div>
+                <div key={a.id} className="py-3 px-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-black text-white/30 w-7 text-right flex-shrink-0">{rank}</span>
+                    <SchoolBadge school={a.school} size={28} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-black uppercase truncate">{a.name}</div>
+                      <div className="text-[10px] text-white/40">{a.school} &middot; {a.sport}</div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-sm font-bold text-white/50">{a.ig_followers ? fmt(a.ig_followers) : "\u2014"}</div>
+                      {a.bestEngRate > 0 && (
+                        <div className="text-[10px] font-bold text-brand">{pct(a.bestEngRate)}</div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <div className="text-sm font-bold text-white/50">{a.ig_followers ? fmt(a.ig_followers) : "\u2014"}</div>
-                    {a.bestEngRate > 0 && (
-                      <div className="text-[10px] font-bold text-brand">{pct(a.bestEngRate)}</div>
-                    )}
-                  </div>
+                  {/* Notes + social links row */}
+                  {(a.notes || links.length > 0) && (
+                    <div className="flex items-center gap-2 mt-1.5 ml-10">
+                      {a.notes && <span className="text-[10px] text-white/35 truncate flex-1">{a.notes}</span>}
+                      {links.length > 0 && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {links.slice(0, 3).map((link, j) => (
+                            <a key={j} href={link.url} target="_blank" rel="noopener noreferrer"
+                              className="w-5 h-5 rounded flex items-center justify-center bg-white/5">
+                              <SocialIcon type={link.icon} className="text-white/40" />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
