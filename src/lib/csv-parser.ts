@@ -78,10 +78,10 @@ export function parseInfoCSV(csvText: string): ParsedAthlete[] {
 
   const headers = parseCSVLine(lines[0]);
 
-  const iFirst = findCol(headers, "first", "firstname", "first name");
-  const iLast = findCol(headers, "last", "lastname", "last name");
-  const iHandle = findCol(headers, "ig handle", "handle", "instagram handle", "ig_handle", "instagram");
-  const iFollowers = findCol(headers, "ig followers", "followers", "ig_followers");
+  const iFirst = findCol(headers, "first", "firstname", "first name", "fname");
+  const iLast = findCol(headers, "last", "lastname", "last name", "lname");
+  const iHandle = findCol(headers, "ig handle", "handle", "instagram handle", "ig_handle", "instagram username", "instagramusername");
+  const iFollowers = findCol(headers, "ig followers", "followers", "ig_followers", "instagram followers");
   const iReachLevel = findCol(headers, "reach level", "reach_level", "reachlevel");
   const iSchool = findCol(headers, "school", "university", "college");
   const iSport = findCol(headers, "sport", "sports");
@@ -136,10 +136,10 @@ export function parseMetricsCSV(csvText: string): ParsedAthlete[] {
   const headers = parseCSVLine(lines[0]);
 
   // Core identity columns
-  const iFirst = findCol(headers, "first", "firstname", "first name");
-  const iLast = findCol(headers, "last", "lastname", "last name");
-  const iHandle = findCol(headers, "ig handle", "handle", "instagram handle", "ig_handle");
-  const iFollowers = findCol(headers, "ig followers", "followers", "ig_followers");
+  const iFirst = findCol(headers, "first", "firstname", "first name", "fname");
+  const iLast = findCol(headers, "last", "lastname", "last name", "lname");
+  const iHandle = findCol(headers, "ig handle", "handle", "instagram handle", "ig_handle", "instagram username", "instagramusername");
+  const iFollowers = findCol(headers, "ig followers", "followers", "ig_followers", "instagram followers");
   const iReachLevel = findCol(headers, "reach level", "reach_level", "reachlevel");
   const iSchool = findCol(headers, "school", "university", "college");
   const iSport = findCol(headers, "sport", "sports");
