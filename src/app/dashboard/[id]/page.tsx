@@ -30,40 +30,75 @@ function generateDescription(campaignName: string, clientName: string, parsed: P
   platform: string;
   tags: string[];
 } {
-  const schools = new Set(parsed.map((a) => a.school));
-  const sports = new Set(parsed.map((a) => a.sport.toLowerCase()));
   const athleteCount = parsed.length;
+
+  // Gather available data
+  const schools = new Set(parsed.map((a) => a.school).filter(Boolean));
+  const sports = new Set(parsed.map((a) => a.sport).filter(Boolean));
   const schoolCount = schools.size;
   const sportCount = sports.size;
 
   let totalFollowers = 0;
   let hasIgFeed = false;
   let hasIgReel = false;
+  let hasIgStory = false;
   let hasTiktok = false;
 
   for (const a of parsed) {
     totalFollowers += a.ig_followers || 0;
     if (a.metrics.ig_feed?.post_url) hasIgFeed = true;
     if (a.metrics.ig_reel?.post_url) hasIgReel = true;
+    if (a.metrics.ig_story?.count) hasIgStory = true;
     if (a.metrics.tiktok?.post_url) hasTiktok = true;
   }
 
-  const sportList = Array.from(sports).slice(0, 4).join(", ");
   const reachStr = fmt(totalFollowers);
 
-  const platforms: string[] = [];
-  if (hasIgFeed) platforms.push("Feed");
-  if (hasIgReel) platforms.push("Reels");
-  if (hasTiktok) platforms.push("TikTok");
-  const platformStr = platforms.length > 0
-    ? "Instagram (" + platforms.filter(p => p !== "TikTok").join(" + ") + ")" + (hasTiktok ? " + TikTok" : "")
-    : "Instagram";
+  // Build platform string from actual data
+  const igParts: string[] = [];
+  if (hasIgFeed) igParts.push("Feed");
+  if (hasIgReel) igParts.push("Reels");
+  if (hasIgStory) igParts.push("Stories");
+  const platformStr = [
+    igParts.length > 0 ? `Instagram (${igParts.join(" + ")})` : null,
+    hasTiktok ? "TikTok" : null,
+  ].filter(Boolean).join(" + ") || "Instagram";
 
-  const desc = `The ${clientName} ${campaignName} campaign activates ${athleteCount} college athletes representing ${schoolCount} universities and ${sportCount} sports to authentically showcase ${clientName.toLowerCase()} product through organic Instagram content — feed posts and behind-the-scenes Reels — integrating the shoe into their training and competition moments. The campaign emphasizes real performance over polished studio aesthetics, letting each athlete's discipline and competitive edge speak for the product.\n\nWith a combined social reach of ${reachStr}+ followers, this roster spans Power Five and mid-major conferences, delivering diverse audience coverage across ${sportList} for ${clientName}.`;
+  // Build content type descriptions from actual data
+  const contentTypes: string[] = [];
+  if (hasIgFeed) contentTypes.push("feed posts");
+  if (hasIgReel) contentTypes.push("Reels");
+  if (hasIgStory) contentTypes.push("Stories");
+  if (hasTiktok) contentTypes.push("TikTok");
+
+  // Build description dynamically — only include what we know
+  let line1 = `The ${clientName} ${campaignName} campaign activates ${athleteCount} college athletes`;
+  if (schoolCount > 0 && sportCount > 0) {
+    line1 += ` representing ${schoolCount} universities and ${sportCount} sports`;
+  } else if (schoolCount > 0) {
+    line1 += ` from ${schoolCount} universities`;
+  } else if (sportCount > 0) {
+    line1 += ` across ${sportCount} sports`;
+  }
+
+  if (contentTypes.length > 0) {
+    line1 += ` through ${contentTypes.join(", ")} content`;
+  }
+  line1 += ".";
+
+  let line2 = "";
+  if (totalFollowers > 0) {
+    line2 = `\n\nWith a combined social reach of ${reachStr}+ followers`;
+    if (sportCount > 0) {
+      const sportList = Array.from(sports).slice(0, 5).join(", ");
+      line2 += `, this roster delivers audience coverage across ${sportList}`;
+    }
+    line2 += ` for ${clientName}.`;
+  }
 
   const autoTags = [clientName, "Product Seeding", "Social First", "NIL Campaign"];
 
-  return { description: desc, platform: platformStr, tags: autoTags };
+  return { description: line1 + line2, platform: platformStr, tags: autoTags };
 }
 
 export default function CampaignEditor() {
