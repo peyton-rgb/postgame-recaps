@@ -28,17 +28,14 @@ export default function RunOfShowIndex() {
       <div className="max-w-4xl mx-auto px-6 py-10">
         {/* Title */}
         <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-3">
+          <div className="flex items-center justify-center mb-4">
             <Image
               src="/raising-canes-logo.png"
               alt="Raising Cane's"
-              width={32}
-              height={32}
+              width={120}
+              height={120}
               className="object-contain"
             />
-            <span className="text-xs font-bold uppercase tracking-[2px] text-[#D73F09]">
-              Raising Cane's
-            </span>
           </div>
           <h1 className="text-3xl md:text-4xl font-black mb-2 text-gray-900">
             St. Patrick's Day 2026
