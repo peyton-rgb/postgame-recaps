@@ -6,32 +6,38 @@ import type { Shoot } from "@/lib/run-of-show-data";
 
 const paradeShotList = [
   {
+    category: "Parade & Restaurant Shots (Top Priority)",
+    shots: [
+      "Hero shot: Cane's float passing in front of a Raising Cane's restaurant (if applicable)",
+      "Float in front of local landmarks / points of interest",
+      "Any Cane's branded signage/moments along parade route",
+      "Wide shot of float moving with crowd showing Cane's branding",
+    ],
+  },
+  {
+    category: "Crew & Cane's Gear",
+    shots: [
+      "Crew members wearing Cane's gear participating in parade",
+      "Crew on foot interacting with crowd — throwing/handing out items",
+      "Crew on float — waving, One Love, throwing items",
+      "Close-ups of Cane's branded swag being distributed",
+      "Crew on/in front of float with parade energy",
+      "Crew holding parade sponsor banner in front of float",
+    ],
+  },
+  {
     category: "Float Coverage",
     shots: [
       "All four sides of float — wide, panning to show entire side",
       "All four sides of float — close, panning to show detail of design/branding",
       "Start wide at front of float, move closer until front focal point fills frame with solid black (transition shot)",
       "Reverse: start with black and move back until entire float is in frame (transition shot)",
-      "Wide shot of float moving with crowd showing Cane's branding",
-      "Float in front of local landmarks / points of interest",
-      "Crew holding parade sponsor banner in front of float",
-    ],
-  },
-  {
-    category: "Crew & Interaction",
-    shots: [
-      "Crew on foot interacting with crowd — throwing/handing out items",
-      "Crew on float — waving, One Love, throwing items",
-      "Close-ups of Cane's branded swag being distributed",
-    ],
-  },
-  {
-    category: "Parade Atmosphere",
-    shots: [
-      "Hero shot: Cane's float passing in front of a Raising Cane's restaurant (if applicable)",
-      "Any Cane's branded signage/moments along parade route",
-      "Crew on/in front of float with parade energy",
       "Close-ups of Cane's branded swag",
+    ],
+  },
+  {
+    category: "Crowd & Atmosphere",
+    shots: [
       "Cheering attendees — close-ups showing excitement",
       "Cheering attendees — wide shots to show size of crowds",
     ],
@@ -40,17 +46,17 @@ const paradeShotList = [
 
 const riverDyeingShotList = [
   {
-    category: "River Dyeing Coverage",
+    category: "River Dyeing Coverage (Top Priority — Reel Opener)",
     shots: [
       "Tight shots of boats dyeing the river",
       "Wider shots of river turning green",
       "Time progression shots showing color change",
-      "Crowd reactions along the riverbank",
     ],
   },
   {
     category: "Atmosphere & Branding",
     shots: [
+      "Crowd reactions along the riverbank",
       "Any Cane's branded signage/moments in the area",
       "Close-ups of Cane's branded swag",
       "Cheering attendees — close-ups showing excitement",
@@ -218,6 +224,9 @@ export function RunOfShow({ shoot }: { shoot: Shoot }) {
               <div className="font-bold text-lg text-gray-900">
                 {shoot.videographer}
               </div>
+              {shoot.phone && (
+                <div className="text-gray-500 text-sm">{shoot.phone}</div>
+              )}
             </div>
           </div>
         </div>
