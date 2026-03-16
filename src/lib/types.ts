@@ -90,3 +90,78 @@ export interface Media {
   is_video_thumbnail: boolean; // true = this is a video's thumbnail image
   created_at: string;
 }
+
+// ─── Run of Show Types ────────────────────────────────────
+
+export interface RosContact {
+  name: string;
+  phone: string;
+  initials?: string;
+}
+
+export interface RosShotSection {
+  category: string;
+  shots: string[];
+}
+
+export interface RosTimelineItem {
+  time: string;
+  title: string;
+  description: string;
+  highlight?: boolean;
+}
+
+export interface RunOfShow {
+  id: string;
+  name: string;
+  slug: string;
+  client_name: string;
+  client_logo_url: string | null;
+  event_name: string | null;
+  subtitle: string | null;
+  camera_settings: string;
+  contacts: RosContact[];
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Brief Types ──────────────────────────────────────────
+
+export interface Brief {
+  id: string;
+  slug: string;
+  title: string;
+  client_name: string;
+  html_content: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Shoot Types ──────────────────────────────────────────
+
+export interface RosShoot {
+  id: string;
+  run_of_show_id: string;
+  slug: string;
+  event_name: string;
+  city: string;
+  state: string;
+  date: string;
+  event_start_time: string;
+  arrival_time: string;
+  videographer: string;
+  videographer_phone: string | null;
+  starting_address: string | null;
+  website: string | null;
+  shoot_type: string;
+  type_label: string | null;
+  content_folder_url: string | null;
+  client_contact_name: string | null;
+  client_contact_phone: string | null;
+  shot_list: RosShotSection[];
+  timeline: RosTimelineItem[];
+  sort_order: number;
+  created_at: string;
+}

@@ -8,6 +8,7 @@ import { SchoolBadge } from "@/components/SchoolBadge";
 import { ThumbnailModal } from "@/components/ThumbnailModal";
 import { MasonryPreview } from "@/components/MasonryPreview";
 import { parseMetricsCSV, mergeAthleteData, type ParsedAthlete } from "@/lib/csv-parser";
+import MetricsSpreadsheet from "@/components/MetricsSpreadsheet";
 import Link from "next/link";
 
 const SECTION_LABELS: { key: keyof VisibleSections; label: string }[] = [
@@ -132,14 +133,8 @@ export default function CampaignEditor() {
   // Brand logo state
   const [brandLogoUrl, setBrandLogoUrl] = useState("");
 
-  // CSV state — two files that merge
-  const [infoParsed, setInfoParsed] = useState<ParsedAthlete[]>([]);
-  const [metricsParsed, setMetricsParsed] = useState<ParsedAthlete[]>([]);
-  const [csvParsed, setCsvParsed] = useState<ParsedAthlete[]>([]);
-  const [csvImporting, setCsvImporting] = useState(false);
-  const [csvDone, setCsvDone] = useState(false);
-  const [infoFileName, setInfoFileName] = useState("");
-  const [metricsFileName, setMetricsFileName] = useState("");
+  // Metrics spreadsheet save state
+  const [savingMetrics, setSavingMetrics] = useState(false);
 
   useEffect(() => { loadData(); }, [id]);
 
@@ -196,87 +191,58 @@ export default function CampaignEditor() {
     setSavingInfo(false);
   }
 
-  function handleInfoCSV(file: File) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const parsed = parseMetricsCSV(text);
-      setInfoParsed(parsed);
-      setInfoFileName(file.name);
-      setCsvParsed(mergeAthleteData(parsed, metricsParsed));
-      setCsvDone(false);
-    };
-    reader.readAsText(file);
-  }
+  async function saveMetrics(rows: { _key: string; _isNew: boolean; id?: string; name: string; ig_handle: string; ig_followers: number | ""; school: string; sport: string; gender: string; notes: string; post_type: string; metrics: import("@/lib/types").AthleteMetrics }[], deletedIds: string[]) {
+    setSavingMetrics(true);
 
-  function handleMetricsCSV(file: File) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const parsed = parseMetricsCSV(text);
-      setMetricsParsed(parsed);
-      setMetricsFileName(file.name);
-      setCsvParsed(mergeAthleteData(infoParsed, parsed));
-      setCsvDone(false);
-    };
-    reader.readAsText(file);
-  }
+    // Delete removed athletes
+    if (deletedIds.length > 0) {
+      await supabase.from("athletes").delete().in("id", deletedIds);
+    }
 
-  async function importCSV() {
-    if (!csvParsed.length) return;
-    setCsvImporting(true);
+    // Upsert existing + insert new
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const data = {
+        name: row.name,
+        school: row.school,
+        sport: row.sport,
+        ig_handle: row.ig_handle,
+        ig_followers: row.ig_followers === "" ? 0 : row.ig_followers,
+        gender: row.gender,
+        notes: row.notes,
+        post_type: row.post_type || "IG Feed",
+        post_url: row.metrics?.ig_feed?.post_url || row.metrics?.ig_reel?.post_url || null,
+        metrics: row.metrics,
+        sort_order: i,
+      };
 
-    for (const pa of csvParsed) {
-      // Try to find existing athlete by name match
-      const existing = athletes.find(
-        (a) => a.name.toLowerCase() === pa.name.toLowerCase()
-      );
-
-      if (existing) {
-        // Update existing athlete with metrics
-        await supabase
-          .from("athletes")
-          .update({
-            ig_handle: pa.ig_handle,
-            ig_followers: pa.ig_followers,
-            gender: pa.gender,
-            notes: pa.notes || existing.notes,
-            metrics: pa.metrics,
-            school: pa.school || existing.school,
-            sport: pa.sport || existing.sport,
-          })
-          .eq("id", existing.id);
-      } else {
-        // Determine post_type from available data
-        let post_type = "IG Feed";
-        if (pa.metrics.ig_reel?.post_url) post_type = "IG Reel";
-        if (pa.metrics.tiktok?.post_url) post_type = "TikTok";
-
-        await supabase.from("athletes").insert({
-          campaign_id: id,
-          name: pa.name,
-          school: pa.school,
-          sport: pa.sport,
-          post_type,
-          post_url: pa.metrics.ig_feed?.post_url || pa.metrics.ig_reel?.post_url || null,
-          ig_handle: pa.ig_handle,
-          ig_followers: pa.ig_followers,
-          gender: pa.gender,
-          notes: pa.notes,
-          metrics: pa.metrics,
-          sort_order: athletes.length,
-        });
+      if (row._isNew) {
+        await supabase.from("athletes").insert({ ...data, campaign_id: id });
+      } else if (row.id) {
+        await supabase.from("athletes").update(data).eq("id", row.id);
       }
     }
 
-    // Auto-generate campaign info from CSV data
-    if (campaign && !description) {
-      const auto = generateDescription(campaign.name, campaign.client_name, csvParsed);
+    // Auto-generate description if empty
+    if (campaign && !description && rows.length > 0) {
+      const parsed: ParsedAthlete[] = rows.map((r) => ({
+        first: r.name.split(" ")[0] || "",
+        last: r.name.split(" ").slice(1).join(" ") || "",
+        name: r.name,
+        ig_handle: r.ig_handle,
+        ig_followers: r.ig_followers === "" ? 0 : r.ig_followers,
+        reach_level: "",
+        school: r.school,
+        sport: r.sport,
+        gender: r.gender,
+        notes: r.notes,
+        metrics: r.metrics || {},
+      }));
+      const auto = generateDescription(campaign.name, campaign.client_name, parsed);
       setDescription(auto.description);
       setPlatform(auto.platform);
       setTags(auto.tags);
 
-      // Auto-save to DB
       const newSettings = {
         ...campaign.settings,
         description: auto.description,
@@ -296,9 +262,7 @@ export default function CampaignEditor() {
       if (!campaignType) setCampaignType("Product Seeding");
     }
 
-    setCsvDone(true);
-    setCsvImporting(false);
-    // Reload data
+    setSavingMetrics(false);
     await loadData();
   }
 
@@ -408,7 +372,7 @@ export default function CampaignEditor() {
     .slice(0, 5);
 
   const steps = [
-    { n: 1, title: "Import CSV", desc: "Upload performance data" },
+    { n: 1, title: "Athletes & Metrics", desc: "Enter data or import CSV" },
     { n: 2, title: "Campaign Info", desc: "Brief, tags & section visibility" },
     { n: 3, title: "Select Posts", desc: "Choose athletes to feature" },
     { n: 4, title: "Upload Content", desc: "Add images & videos" },
@@ -459,109 +423,15 @@ export default function CampaignEditor() {
       {/* Content */}
       <div className="p-8 pb-24">
 
-        {/* ── STEP 1: CSV Upload ────────────────────────────── */}
+        {/* ── STEP 1: Athletes & Metrics ─────────────────────── */}
         {step === 1 && (
-          <div className="max-w-4xl space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              {/* Info CSV Upload */}
-              <div
-                onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleInfoCSV(f); }}
-                onDragOver={(e) => e.preventDefault()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${infoFileName ? "border-green-600/50 bg-green-600/5" : "border-gray-700 hover:border-[#D73F09]/50"}`}
-                onClick={() => {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = ".csv";
-                  input.onchange = (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (f) handleInfoCSV(f);
-                  };
-                  input.click();
-                }}
-              >
-                <div className="text-xs font-black uppercase tracking-wider text-[#D73F09] mb-3">1. Campaign Info</div>
-                {infoFileName ? (
-                  <>
-                    <div className="text-sm font-bold text-green-400 mb-1">{infoFileName}</div>
-                    <div className="text-xs text-gray-500">{infoParsed.length} athletes found · Click to replace</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-sm font-bold text-gray-400 mb-1">Drop CSV or click to upload</div>
-                    <div className="text-xs text-gray-600">Athlete roster — name, handle, school, sport</div>
-                  </>
-                )}
-              </div>
-
-              {/* Metrics CSV Upload */}
-              <div
-                onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleMetricsCSV(f); }}
-                onDragOver={(e) => e.preventDefault()}
-                className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${metricsFileName ? "border-green-600/50 bg-green-600/5" : "border-gray-700 hover:border-[#D73F09]/50"}`}
-                onClick={() => {
-                  const input = document.createElement("input");
-                  input.type = "file";
-                  input.accept = ".csv";
-                  input.onchange = (e) => {
-                    const f = (e.target as HTMLInputElement).files?.[0];
-                    if (f) handleMetricsCSV(f);
-                  };
-                  input.click();
-                }}
-              >
-                <div className="text-xs font-black uppercase tracking-wider text-[#D73F09] mb-3">2. Campaign Metrics</div>
-                {metricsFileName ? (
-                  <>
-                    <div className="text-sm font-bold text-green-400 mb-1">{metricsFileName}</div>
-                    <div className="text-xs text-gray-500">{metricsParsed.length} athletes found · Click to replace</div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-sm font-bold text-gray-400 mb-1">Drop CSV or click to upload</div>
-                    <div className="text-xs text-gray-600">Performance data — engagement, reach, post URLs</div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {csvParsed.length > 0 && (
-              <>
-                <div className="text-sm font-bold text-gray-300">{csvParsed.length} athletes parsed</div>
-                <div className="overflow-x-auto border border-gray-800 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-gray-800 text-left">
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">Name</th>
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">Handle</th>
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">Followers</th>
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">School</th>
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">Sport</th>
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">IG Feed Eng.</th>
-                        <th className="px-3 py-2 text-gray-500 font-bold uppercase">IG Reel Eng.</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {csvParsed.map((a, i) => (
-                        <tr key={i} className="border-b border-gray-800/50">
-                          <td className="px-3 py-2 font-bold text-white">{a.name}</td>
-                          <td className="px-3 py-2 text-gray-400">@{a.ig_handle}</td>
-                          <td className="px-3 py-2 text-gray-400">{a.ig_followers.toLocaleString()}</td>
-                          <td className="px-3 py-2 text-gray-400">{a.school}</td>
-                          <td className="px-3 py-2 text-gray-400">{a.sport}</td>
-                          <td className="px-3 py-2 text-gray-400">{a.metrics.ig_feed?.engagement_rate != null ? a.metrics.ig_feed.engagement_rate + "%" : "—"}</td>
-                          <td className="px-3 py-2 text-gray-400">{a.metrics.ig_reel?.engagement_rate != null ? a.metrics.ig_reel.engagement_rate + "%" : "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <button onClick={importCSV} disabled={csvImporting || csvDone}
-                  className={`px-6 py-2.5 rounded-lg text-sm font-bold text-white ${csvDone ? "bg-green-600" : "bg-[#D73F09] hover:bg-[#c43808]"} disabled:opacity-50`}>
-                  {csvImporting ? "Importing..." : csvDone ? "Imported Successfully" : "Import Athletes & Metrics"}
-                </button>
-              </>
-            )}
+          <div>
+            <MetricsSpreadsheet
+              athletes={athletes}
+              campaignId={id}
+              onSave={saveMetrics}
+              saving={savingMetrics}
+            />
           </div>
         )}
 

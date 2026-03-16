@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Postgame Recaps",
-  description: "Campaign recap builder for athlete content",
+  title: "Postgame Page Creator",
+  description: "Build and publish campaign recaps, run of shows, briefs, and more",
 };
 
 export default function RootLayout({
