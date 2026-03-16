@@ -36,44 +36,40 @@ export default function MediaLibrary() {
 
   async function loadData() {
     setLoading(true);
-    const { data: camps } = await supabase
-      .from("campaigns")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setCampaigns(camps || []);
+    // Fetch all data in parallel
+    const [campsRes, athletesRes, mediaRes] = await Promise.all([
+      supabase.from("campaigns").select("*").order("created_at", { ascending: false }),
+      supabase.from("athletes").select("id, campaign_id"),
+      supabase.from("media").select("id, campaign_id").eq("is_video_thumbnail", false),
+    ]);
+    const camps = campsRes.data || [];
+    const allAthletes = athletesRes.data || [];
+    const allMedia = mediaRes.data || [];
+    setCampaigns(camps);
 
-    // Get counts for each campaign
     const counts: Record<string, { athletes: number; media: number }> = {};
-    if (camps && camps.length > 0) {
-      const { data: allAthletes } = await supabase
-        .from("athletes")
-        .select("id, campaign_id");
-      const { data: allMedia } = await supabase
-        .from("media")
-        .select("id, campaign_id")
-        .eq("is_video_thumbnail", false);
-
-      for (const c of camps) {
-        const athleteCount = allAthletes?.filter((a) => a.campaign_id === c.id).length || 0;
-        const mediaCount = allMedia?.filter((m) => m.campaign_id === c.id).length || 0;
-        counts[c.id] = { athletes: athleteCount, media: mediaCount };
-      }
-      setCampaignCounts(counts);
+    for (const c of camps) {
+      counts[c.id] = {
+        athletes: allAthletes.filter((a) => a.campaign_id === c.id).length,
+        media: allMedia.filter((m) => m.campaign_id === c.id).length,
+      };
     }
+    setCampaignCounts(counts);
 
     // Group campaigns by brand (client_name)
     const brandMap = new Map<string, Campaign[]>();
-    for (const c of camps || []) {
+    for (const c of camps) {
       const existing = brandMap.get(c.client_name) || [];
       existing.push(c);
       brandMap.set(c.client_name, existing);
     }
-    const brandList: Brand[] = Array.from(brandMap.entries()).map(([name, brandCamps]) => ({
-      name,
-      campaigns: brandCamps,
-      totalMedia: brandCamps.reduce((sum, c) => sum + (counts[c.id]?.media || 0), 0),
-    }));
-    setBrands(brandList);
+    setBrands(
+      Array.from(brandMap.entries()).map(([name, brandCamps]) => ({
+        name,
+        campaigns: brandCamps,
+        totalMedia: brandCamps.reduce((sum, c) => sum + (counts[c.id]?.media || 0), 0),
+      }))
+    );
     setLoading(false);
   }
 
@@ -83,25 +79,20 @@ export default function MediaLibrary() {
 
   async function openCampaign(campaign: Campaign, brandName: string) {
     setLoading(true);
-    const { data } = await supabase
-      .from("athletes")
-      .select("*")
-      .eq("campaign_id", campaign.id)
-      .order("sort_order", { ascending: true });
-    setAthletes(data || []);
+    // Fetch athletes and their media counts in parallel
+    const [athletesRes, mediaRes] = await Promise.all([
+      supabase.from("athletes").select("*").eq("campaign_id", campaign.id).order("sort_order", { ascending: true }),
+      supabase.from("media").select("id, athlete_id").eq("campaign_id", campaign.id).eq("is_video_thumbnail", false),
+    ]);
+    const athleteData = athletesRes.data || [];
+    const mediaData = mediaRes.data || [];
+    setAthletes(athleteData);
 
-    if (data && data.length > 0) {
-      const { data: mediaData } = await supabase
-        .from("media")
-        .select("id, athlete_id")
-        .eq("campaign_id", campaign.id)
-        .eq("is_video_thumbnail", false);
-      const mediaCounts: Record<string, number> = {};
-      for (const a of data) {
-        mediaCounts[a.id] = mediaData?.filter((m) => m.athlete_id === a.id).length || 0;
-      }
-      setAthleteMediaCounts(mediaCounts);
+    const mediaCounts: Record<string, number> = {};
+    for (const a of athleteData) {
+      mediaCounts[a.id] = mediaData.filter((m) => m.athlete_id === a.id).length;
     }
+    setAthleteMediaCounts(mediaCounts);
 
     setView({ level: "athletes", brand: brandName, campaign });
     setLoading(false);
