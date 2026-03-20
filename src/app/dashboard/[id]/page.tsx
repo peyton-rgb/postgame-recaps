@@ -134,6 +134,12 @@ export default function CampaignEditor() {
   // Brand logo state
   const [brandLogoUrl, setBrandLogoUrl] = useState("");
 
+  // Editable campaign name / client name
+  const [editingName, setEditingName] = useState(false);
+  const [editingClient, setEditingClient] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [clientDraft, setClientDraft] = useState("");
+
   // Metrics spreadsheet save state
   const [savingMetrics, setSavingMetrics] = useState(false);
 
@@ -233,6 +239,17 @@ export default function CampaignEditor() {
     }
 
     setImportingTracker(false);
+  }
+
+  async function saveCampaignName(field: "name" | "client_name", value: string) {
+    if (!campaign || !value.trim()) return;
+    const { data } = await supabase
+      .from("campaigns")
+      .update({ [field]: value.trim() })
+      .eq("id", campaign.id)
+      .select()
+      .single();
+    if (data) setCampaign(data);
   }
 
   async function saveCampaignInfo() {
@@ -579,8 +596,42 @@ export default function CampaignEditor() {
         <div className="flex items-center gap-6">
           <Link href="/dashboard" className="text-gray-500 hover:text-white">← Back</Link>
           <div>
-            <div className="text-xs font-bold uppercase tracking-[2px] text-[#D73F09] mb-1">{campaign.client_name}</div>
-            <h1 className="text-xl font-black">{campaign.name}</h1>
+            {editingClient ? (
+              <input
+                autoFocus
+                value={clientDraft}
+                onChange={(e) => setClientDraft(e.target.value)}
+                onBlur={() => { saveCampaignName("client_name", clientDraft); setEditingClient(false); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { saveCampaignName("client_name", clientDraft); setEditingClient(false); } if (e.key === "Escape") setEditingClient(false); }}
+                className="text-xs font-bold uppercase tracking-[2px] text-[#D73F09] mb-1 bg-transparent border-b border-[#D73F09] outline-none w-48"
+              />
+            ) : (
+              <div
+                className="text-xs font-bold uppercase tracking-[2px] text-[#D73F09] mb-1 cursor-pointer hover:opacity-70"
+                onClick={() => { setClientDraft(campaign.client_name); setEditingClient(true); }}
+                title="Click to edit"
+              >
+                {campaign.client_name}
+              </div>
+            )}
+            {editingName ? (
+              <input
+                autoFocus
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                onBlur={() => { saveCampaignName("name", nameDraft); setEditingName(false); }}
+                onKeyDown={(e) => { if (e.key === "Enter") { saveCampaignName("name", nameDraft); setEditingName(false); } if (e.key === "Escape") setEditingName(false); }}
+                className="text-xl font-black bg-transparent border-b border-white outline-none w-72 text-white"
+              />
+            ) : (
+              <h1
+                className="text-xl font-black cursor-pointer hover:opacity-70"
+                onClick={() => { setNameDraft(campaign.name); setEditingName(true); }}
+                title="Click to edit"
+              >
+                {campaign.name}
+              </h1>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-4">
