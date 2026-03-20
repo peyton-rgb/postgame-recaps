@@ -289,9 +289,7 @@ export function CampaignRecap({
           <h2 className="text-xl md:text-2xl font-black uppercase tracking-wide mb-8">Campaign Metrics</h2>
 
           {/* Summary row */}
-          <div className={`grid grid-cols-2 gap-3 mb-8 ${
-            stats.hasSales ? "md:grid-cols-3" : "md:grid-cols-4"
-          }`}>
+          <div className="flex flex-wrap justify-center gap-3 mb-8">
             {[
               { value: stats.athleteCount, label: "ATHLETES" },
               { value: stats.totalPosts, label: "TOTAL POSTS" },
@@ -300,7 +298,7 @@ export function CampaignRecap({
               { value: pct(stats.avgEngRate), label: "AVG ENGAGEMENT RATE" },
               ...(stats.hasSales ? [{ value: dollar(stats.sales.revenue), label: "TOTAL SALES" }] : []),
             ].map((m) => (
-              <div key={m.label} className="bg-white/[0.07] border border-white/[0.15] rounded-xl p-5 md:p-8 text-center">
+              <div key={m.label} className="bg-white/[0.07] border border-white/[0.15] rounded-xl p-5 md:p-8 text-center flex-1 min-w-[140px] max-w-[220px]">
                 <div className="text-2xl md:text-4xl font-black text-white mb-2">{m.value}</div>
                 <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-white/70">{m.label}</div>
               </div>
