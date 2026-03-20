@@ -267,7 +267,6 @@ export function CampaignRecap({
                 { label: "TYPE", value: settings.campaign_type },
                 { label: "PLATFORM", value: settings.platform },
                 { label: "ATHLETES", value: String(stats.athleteCount) },
-                { label: "ATHLETES", value: String(stats.athleteCount) },
                 { label: "SCHOOLS", value: String(stats.schoolCount) },
                 { label: "SPORTS", value: String(stats.sportCount) },
                 { label: "TOTAL REACH", value: fmt(stats.totalReach) + "+ Followers" },
