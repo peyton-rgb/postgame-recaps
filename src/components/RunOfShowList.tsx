@@ -44,7 +44,11 @@ export default function RunOfShowList() {
         client_name: newClient,
         event_name: newEventName || null,
         published: false,
-        contacts: [],
+        contacts: [
+          { name: "Aaron H.", phone: "(941) 786-5956", initials: "AH" },
+          { name: "Peyton J.", phone: "(941) 567-8565", initials: "PJ" },
+          { name: "Dom M.", phone: "(352) 530-7027", initials: "DM" },
+        ],
       })
       .select()
       .single();
