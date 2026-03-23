@@ -77,10 +77,10 @@ export function DynamicRunOfShowDetail({
             Run of Show
           </div>
           <h1 className="text-3xl md:text-4xl font-black mb-2 text-gray-900">
-            {shoot.event_name}
+            {shoot.athlete || shoot.event_name}
           </h1>
           <p className="text-lg text-gray-500">
-            {shoot.city}, {shoot.state}
+            {shoot.city}, {shoot.state}{shoot.athlete ? ` — ${shoot.event_name}` : ""}
           </p>
         </div>
 

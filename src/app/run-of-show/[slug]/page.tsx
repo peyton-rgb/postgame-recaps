@@ -97,7 +97,7 @@ export default async function DynamicRunOfShowIndex({
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="font-bold text-lg text-gray-900 group-hover:text-[#D73F09] transition-colors">
-                      {shoot.city}, {shoot.state}
+                      {shoot.athlete || `${shoot.city}, ${shoot.state}`}
                     </h2>
                     {shoot.type_label && (
                       <span className="text-[10px] font-bold uppercase tracking-wider bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
@@ -106,7 +106,7 @@ export default async function DynamicRunOfShowIndex({
                     )}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {shoot.event_name}
+                    {shoot.city}, {shoot.state}
                   </div>
                 </div>
                 <div className="flex items-center gap-6 text-sm">

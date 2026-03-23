@@ -1053,7 +1053,7 @@ export default function RunOfShowEditor() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-bold text-lg">
-                          {shoot.city}, {shoot.state}
+                          {shoot.athlete || `${shoot.city}, ${shoot.state}`}
                         </h3>
                         {shoot.type_label && (
                           <span className="text-[10px] font-bold uppercase tracking-wider bg-green-900/30 text-green-400 px-2 py-0.5 rounded-full">
@@ -1062,7 +1062,7 @@ export default function RunOfShowEditor() {
                         )}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {shoot.event_name}
+                        {shoot.city}, {shoot.state}
                       </div>
                     </div>
                     <div className="flex items-center gap-6 text-sm">
