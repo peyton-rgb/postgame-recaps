@@ -157,6 +157,23 @@ export function DynamicRunOfShowDetail({
           )}
         </div>
 
+        {/* Athlete */}
+        {shoot.athlete && (
+          <div className="bg-white border border-gray-200 rounded-xl p-5 mb-10">
+            <div className="text-xs font-bold uppercase tracking-[1.5px] text-gray-400 mb-3">
+              Athlete
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-[#1a1a2e] flex items-center justify-center text-sm font-black text-white">
+                {shoot.athlete.split(" ").map((n) => n[0]).join("")}
+              </div>
+              <div className="font-bold text-lg text-gray-900">
+                {shoot.athlete}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Videographer Info */}
         <div className="bg-white border border-gray-200 rounded-xl p-5 mb-10">
           <div className="text-xs font-bold uppercase tracking-[1.5px] text-gray-400 mb-3">

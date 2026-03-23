@@ -330,6 +330,18 @@ function ShootModal({
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                  Athlete
+                </label>
+                <input
+                  value={form.athlete || ""}
+                  onChange={(e) => updateForm({ athlete: e.target.value })}
+                  placeholder="e.g. John Smith"
+                  className="w-full px-4 py-3 bg-black border border-gray-700 rounded-lg text-white focus:border-[#D73F09] outline-none"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
@@ -759,6 +771,7 @@ export default function RunOfShowEditor() {
       date: data.date || "",
       event_start_time: data.event_start_time || "",
       arrival_time: data.arrival_time || "",
+      athlete: data.athlete || null,
       videographer: data.videographer || "TBD",
       videographer_phone: data.videographer_phone || null,
       starting_address: data.starting_address || null,

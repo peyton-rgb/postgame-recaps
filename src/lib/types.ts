@@ -198,6 +198,7 @@ export interface RosShoot {
   date: string;
   event_start_time: string;
   arrival_time: string;
+  athlete: string | null;
   videographer: string;
   videographer_phone: string | null;
   starting_address: string | null;
