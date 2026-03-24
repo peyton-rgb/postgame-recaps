@@ -186,6 +186,70 @@ export interface Brief {
   updated_at: string;
 }
 
+// ─── Deal Tracker Types ──────────────────────────────────
+
+export interface Deal {
+  id: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+  athlete_name: string | null;
+  athlete_school: string | null;
+  athlete_sport: string | null;
+  deal_type: string | null;
+  tier: "tier_1" | "tier_2" | "tier_3";
+  value: string | null;
+  description: string | null;
+  featured: boolean;
+  published: boolean;
+  sort_order: number;
+  date_announced: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PressArticle {
+  id: string;
+  title: string;
+  slug: string;
+  publication: string | null;
+  author: string | null;
+  excerpt: string | null;
+  content: string | null;
+  external_url: string | null;
+  image_url: string | null;
+  category: string | null;
+  featured: boolean;
+  published: boolean;
+  published_date: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CaseStudy {
+  id: string;
+  title: string;
+  slug: string;
+  brand_name: string;
+  brand_logo_url: string | null;
+  category: string | null;
+  hero_stat: string | null;
+  hero_stat_label: string | null;
+  overview: string | null;
+  challenge: string | null;
+  solution: string | null;
+  results: string | null;
+  metrics: Record<string, unknown>;
+  highlights: string[];
+  image_url: string | null;
+  featured: boolean;
+  published: boolean;
+  published_date: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Shoot Types ──────────────────────────────────────────
 
 export interface RosShoot {

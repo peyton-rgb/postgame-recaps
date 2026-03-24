@@ -5,6 +5,9 @@ import { Suspense } from "react";
 import CampaignList from "@/components/CampaignList";
 import RunOfShowList from "@/components/RunOfShowList";
 import BriefList from "@/components/BriefList";
+import DealList from "@/components/DealList";
+import PressList from "@/components/PressList";
+import CaseStudyList from "@/components/CaseStudyList";
 import TrackerList from "@/components/TrackerList";
 import ComingSoon from "@/components/ComingSoon";
 import { PostgameLogo } from "@/components/PostgameLogo";
@@ -16,6 +19,9 @@ const TABS = [
   { key: "trackers", label: "Performance Trackers" },
   { key: "ros", label: "Run of Shows" },
   { key: "briefs", label: "Briefs" },
+  { key: "deals", label: "Deal Tracker" },
+  { key: "press", label: "Press" },
+  { key: "case-studies", label: "Case Studies" },
   { key: "event-pages", label: "Event Pages" },
 ] as const;
 
@@ -85,6 +91,9 @@ function DashboardContent() {
         {activeTab === "trackers" && <TrackerList />}
         {activeTab === "ros" && <RunOfShowList />}
         {activeTab === "briefs" && <BriefList />}
+        {activeTab === "deals" && <DealList />}
+        {activeTab === "press" && <PressList />}
+        {activeTab === "case-studies" && <CaseStudyList />}
         {activeTab === "event-pages" && <ComingSoon label="Event Pages" />}
       </div>
     </div>
