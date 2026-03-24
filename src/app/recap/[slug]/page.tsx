@@ -4,6 +4,8 @@ import { CampaignRecap } from "@/components/CampaignRecap";
 import { Top50Recap } from "@/components/Top50Recap";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: Promise<{ slug: string }>;
 };

@@ -618,6 +618,9 @@ export function CampaignRecap({
                   <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-right">Impressions</th>
                   <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-right">Engagements</th>
                   <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-right">Eng. Rate</th>
+                  {stats.hasClicks && <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-right">Clicks</th>}
+                  {stats.hasClicks && <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-right">Orders</th>}
+                  {stats.hasClicks && <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-right">Sales</th>}
                   <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-center">Post</th>
                   <th className="px-3 py-3 text-[10px] font-bold uppercase tracking-wider text-white/50 text-center">Reel</th>
                 </tr>
@@ -644,6 +647,9 @@ export function CampaignRecap({
                     <td className="px-3 py-3 text-sm font-bold text-white/70 text-right">{fmt(getTotalImpressions(a))}</td>
                     <td className="px-3 py-3 text-sm font-bold text-white/70 text-right">{fmt(getTotalEngagements(a))}</td>
                     <td className="px-3 py-3 text-sm font-bold text-brand text-right">{getBestEngRate(a) > 0 ? pct(getBestEngRate(a)) : "\u2014"}</td>
+                    {stats.hasClicks && <td className="px-3 py-3 text-sm font-bold text-white/70 text-right">{m.clicks?.link_clicks ? fmt(m.clicks.link_clicks) : "\u2014"}</td>}
+                    {stats.hasClicks && <td className="px-3 py-3 text-sm font-bold text-white/70 text-right">{m.clicks?.orders ? fmt(m.clicks.orders) : "\u2014"}</td>}
+                    {stats.hasClicks && <td className="px-3 py-3 text-sm font-bold text-emerald-400 text-right">{m.clicks?.sales ? dollar(m.clicks.sales) : "\u2014"}</td>}
                     <td className="px-3 py-3 text-center">
                       {feedUrl ? (
                         <a href={feedUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-brand/15 text-brand hover:bg-brand/30 transition-colors">
@@ -686,6 +692,13 @@ export function CampaignRecap({
                   <div className="text-sm font-bold text-white/70">{a.ig_followers ? fmt(a.ig_followers) : "\u2014"}</div>
                   {getBestEngRate(a) > 0 && (
                     <div className="text-xs font-bold text-brand">{pct(getBestEngRate(a))}</div>
+                  )}
+                  {stats.hasClicks && (m.clicks?.link_clicks || m.clicks?.orders || m.clicks?.sales) && (
+                    <div className="flex gap-2 justify-end mt-0.5">
+                      {m.clicks?.link_clicks ? <span className="text-[10px] text-white/50">{fmt(m.clicks.link_clicks)} clicks</span> : null}
+                      {m.clicks?.orders ? <span className="text-[10px] text-white/50">{fmt(m.clicks.orders)} orders</span> : null}
+                      {m.clicks?.sales ? <span className="text-[10px] font-bold text-emerald-400">{dollar(m.clicks.sales)}</span> : null}
+                    </div>
                   )}
                 </div>
                 <div className="flex gap-1.5 flex-shrink-0">
