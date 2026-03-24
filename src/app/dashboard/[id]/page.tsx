@@ -733,6 +733,13 @@ export default function CampaignEditor() {
               campaignId={id}
               onSave={saveMetrics}
               saving={savingMetrics}
+              hiddenColumns={campaign?.settings?.hidden_columns || []}
+              onHiddenColumnsChange={async (cols) => {
+                if (!campaign) return;
+                const newSettings = { ...campaign.settings, hidden_columns: cols };
+                await supabase.from("campaigns").update({ settings: newSettings }).eq("id", campaign.id);
+                setCampaign({ ...campaign, settings: newSettings });
+              }}
             />
           </div>
         )}

@@ -31,6 +31,8 @@ interface Props {
   campaignId: string;
   onSave: (rows: EditableRow[], deletedIds: string[]) => Promise<void>;
   saving: boolean;
+  hiddenColumns?: string[];
+  onHiddenColumnsChange?: (hiddenColumns: string[]) => void;
 }
 
 // ─── Column Definitions ──────────────────────────────────
@@ -297,15 +299,37 @@ function blankRow(): EditableRow {
 
 // ─── Component ───────────────────────────────────────────
 
-export default function MetricsSpreadsheet({ athletes, campaignId, onSave, saving }: Props) {
+export default function MetricsSpreadsheet({ athletes, campaignId, onSave, saving, hiddenColumns: initialHidden, onHiddenColumnsChange }: Props) {
   const [rows, setRows] = useState<EditableRow[]>(() => athletes.map(athleteToRow));
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<PlatformTab>("identity");
   const [isDirty, setIsDirty] = useState(false);
   const [csvFileName, setCsvFileName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [hiddenCols, setHiddenCols] = useState<Set<string>>(new Set(initialHidden || []));
+  const [showColToggle, setShowColToggle] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
+  const colToggleRef = useRef<HTMLDivElement>(null);
+
+  // Close column toggle on outside click
+  useEffect(() => {
+    if (!showColToggle) return;
+    const handler = (e: MouseEvent) => {
+      if (colToggleRef.current && !colToggleRef.current.contains(e.target as Node)) setShowColToggle(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showColToggle]);
+
+  const toggleColumn = useCallback((key: string) => {
+    setHiddenCols((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      onHiddenColumnsChange?.([...next]);
+      return next;
+    });
+  }, [onHiddenColumnsChange]);
 
   // Sync rows when athletes prop changes (e.g. after save reloads data)
   useEffect(() => {
@@ -448,7 +472,8 @@ export default function MetricsSpreadsheet({ athletes, campaignId, onSave, savin
     ...(hasTargetsData ? [TARGETS_TAB] : []),
   ];
 
-  const cols = TAB_COLS[activeTab];
+  const allCols = TAB_COLS[activeTab];
+  const cols = allCols.filter((c) => !hiddenCols.has(c.key));
   const newCount = rows.filter((r) => r._isNew).length;
 
   // ─── Render ──────────────────────────────────────────
@@ -482,6 +507,38 @@ export default function MetricsSpreadsheet({ athletes, campaignId, onSave, savin
           {deletedIds.length > 0 && <span className="text-red-400 ml-1">({deletedIds.length} to delete)</span>}
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative" ref={colToggleRef}>
+            <button
+              onClick={() => setShowColToggle((v) => !v)}
+              className={`px-3 py-1.5 border rounded-lg text-xs font-bold transition-colors ${showColToggle ? "border-[#D73F09] text-[#D73F09]" : "border-gray-700 text-gray-400 hover:text-white hover:border-gray-500"}`}
+              title="Toggle columns"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block mr-1">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" />
+              </svg>
+              Columns
+            </button>
+            {showColToggle && (
+              <div className="absolute right-0 top-full mt-1 bg-[#1a1a1a] border border-gray-700 rounded-xl shadow-2xl z-50 p-3 min-w-[200px] max-h-[300px] overflow-y-auto">
+                <div className="text-[10px] font-bold uppercase text-gray-500 tracking-wider mb-2">
+                  {tabs.find((t) => t.key === activeTab)?.label} Columns
+                </div>
+                {allCols.map((col) => (
+                  <label key={col.key} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-white/5 rounded px-1">
+                    <div
+                      className={`w-4 h-4 rounded border flex items-center justify-center ${!hiddenCols.has(col.key) ? "bg-[#D73F09] border-[#D73F09]" : "border-gray-600"}`}
+                      onClick={() => toggleColumn(col.key)}
+                    >
+                      {!hiddenCols.has(col.key) && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-300">{col.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => {
               const input = document.createElement("input");

@@ -37,6 +37,13 @@ export default function TrackerEditor() {
     setLoading(false);
   }
 
+  async function handleHiddenColumnsChange(columns: string[]) {
+    if (!tracker) return;
+    const newSettings = { ...tracker.settings, hidden_columns: columns };
+    await supabase.from("campaigns").update({ settings: newSettings }).eq("id", id);
+    setTracker({ ...tracker, settings: newSettings });
+  }
+
   async function handleSaveMetrics(rows: any[], deletedIds: string[]) {
     setSavingMetrics(true);
 
@@ -167,6 +174,8 @@ export default function TrackerEditor() {
           campaignId={id}
           onSave={handleSaveMetrics}
           saving={savingMetrics}
+          hiddenColumns={tracker?.settings?.hidden_columns || []}
+          onHiddenColumnsChange={handleHiddenColumnsChange}
         />
       </div>
     </div>
