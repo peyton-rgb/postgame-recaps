@@ -9,6 +9,7 @@ import DealList from "@/components/DealList";
 import PressList from "@/components/PressList";
 import CaseStudyList from "@/components/CaseStudyList";
 import TrackerList from "@/components/TrackerList";
+import NilTrackerDashboard from "@/components/NilTrackerDashboard";
 import ComingSoon from "@/components/ComingSoon";
 import { PostgameLogo } from "@/components/PostgameLogo";
 import Link from "next/link";
@@ -19,6 +20,7 @@ const TABS = [
   { key: "trackers", label: "Performance Trackers" },
   { key: "ros", label: "Run of Shows" },
   { key: "briefs", label: "Briefs" },
+  { key: "nil-tracker", label: "NIL Tracker" },
   { key: "deals", label: "Deal Tracker" },
   { key: "press", label: "Press" },
   { key: "case-studies", label: "Case Studies" },
@@ -91,6 +93,7 @@ function DashboardContent() {
         {activeTab === "trackers" && <TrackerList />}
         {activeTab === "ros" && <RunOfShowList />}
         {activeTab === "briefs" && <BriefList />}
+        {activeTab === "nil-tracker" && <NilTrackerDashboard />}
         {activeTab === "deals" && <DealList />}
         {activeTab === "press" && <PressList />}
         {activeTab === "case-studies" && <CaseStudyList />}

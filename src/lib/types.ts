@@ -186,6 +186,34 @@ export interface Brief {
   updated_at: string;
 }
 
+// ─── NIL Tracker Types ──────────────────────────────────
+
+export interface NilTrackerItem {
+  id: string;
+  wix_id: string | null;
+  status: "PUBLISHED" | "DRAFT";
+  player_name: string | null;
+  college_name: string | null;
+  title: string | null;
+  image_url: string | null;
+  overview: Record<string, unknown> | null;
+  video_url: string | null;
+  video_poster_url: string | null;
+  date: string | null;
+  slug: string | null;
+  sport_tags: string[];
+  brand_tags: string[];
+  industry_tags: string[];
+  campaign_types: string[];
+  case_study_highlight: boolean;
+  college_display: string | null;
+  publish_date: string | null;
+  unpublish_date: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 // ─── Deal Tracker Types ──────────────────────────────────
 
 export interface Deal {
