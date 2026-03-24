@@ -63,11 +63,16 @@ export default function DealsPage() {
       {/* Header */}
       <div className="border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-5 md:px-8 py-12 md:py-20 text-center">
+          <img
+            src="/postgame-logo-white.png"
+            alt="Postgame"
+            className="h-6 md:h-8 object-contain mx-auto mb-5 md:mb-6"
+          />
           <h1
             className="text-5xl md:text-7xl font-bold tracking-tight mb-6"
             style={{ fontFamily: "'Bebas Neue', sans-serif", color: "#D73F09" }}
           >
-            POSTGAME NIL DEAL TRACKER
+            NIL DEAL TRACKER
           </h1>
           <p
             className="text-gray-400 max-w-3xl mx-auto"
