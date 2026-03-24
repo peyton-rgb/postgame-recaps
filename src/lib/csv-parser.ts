@@ -62,7 +62,9 @@ function findCol(headers: string[], ...names: string[]): number {
     const idx = headers.findIndex((h) => {
       const hClean = h.toLowerCase().replace(/[^a-z0-9]/g, "");
       if (!hClean) return false; // Skip empty headers
-      return hClean === lower || hClean.includes(lower) || lower.includes(hClean);
+      // Exact match or header contains the search term (e.g. header "IG Feed Impressions" includes "feed impressions").
+      // Do NOT match when the search term contains the header (e.g. search "ig story impressions" should NOT match bare "Impressions" header).
+      return hClean === lower || hClean.includes(lower);
     });
     if (idx !== -1) return idx;
   }
@@ -239,17 +241,25 @@ export function parseMetricsCSV(csvText: string): ParsedAthlete[] {
     if (totalEngIndices.length >= 2) reelTotalEngIdx = totalEngIndices[1];
   }
 
-  // Handle duplicate "Impressions" columns by position (first = feed, second = story)
+  // Handle duplicate or ambiguous "Impressions" columns
   let feedImpressionsIdx = iIgFeedImpressions;
   let storyImpressionsIdx = iIgStoryImpressions;
   if (feedImpressionsIdx === -1 || storyImpressionsIdx === -1 || feedImpressionsIdx === storyImpressionsIdx) {
-    const impIndices: number[] = [];
+    // Scan all columns that contain "impressions" and categorize by platform keywords
+    const feedCandidates: number[] = [];
+    const storyCandidates: number[] = [];
+    const bareCandidates: number[] = [];
     headers.forEach((h, i) => {
       const clean = h.toLowerCase().replace(/[^a-z0-9]/g, "");
-      if (clean === "impressions") impIndices.push(i);
+      if (!clean.includes("impressions")) return;
+      if (clean.includes("feed")) feedCandidates.push(i);
+      else if (clean.includes("story") || clean.includes("stories")) storyCandidates.push(i);
+      else if (clean === "impressions") bareCandidates.push(i);
     });
-    if (impIndices.length >= 1) feedImpressionsIdx = impIndices[0];
-    if (impIndices.length >= 2) storyImpressionsIdx = impIndices[1];
+    if (feedImpressionsIdx === -1) feedImpressionsIdx = feedCandidates[0] ?? bareCandidates[0] ?? -1;
+    if (storyImpressionsIdx === -1 || storyImpressionsIdx === feedImpressionsIdx) {
+      storyImpressionsIdx = storyCandidates[0] ?? (bareCandidates.length >= 2 ? bareCandidates[1] : -1);
+    }
   }
 
   const cFirst = iFirst !== -1 ? iFirst : 0;
