@@ -111,9 +111,14 @@ export default function TrackerEditor() {
   // Summary stats
   const totalAthletes = athletes.length;
   const totalFollowers = athletes.reduce((s, a) => s + (a.ig_followers || 0), 0);
+  const totalStoryImpressions = athletes.reduce((s, a) => {
+    const m = a.metrics || {};
+    return s + (m.ig_story?.impressions || 0) * (m.ig_story?.count || 1);
+  }, 0);
   const totalImpressions = athletes.reduce((s, a) => {
     const m = a.metrics || {};
-    return s + (m.ig_feed?.impressions || 0) + (m.ig_reel?.views || 0) + (m.tiktok?.views || 0);
+    const storyImp = (m.ig_story?.impressions || 0) * (m.ig_story?.count || 1);
+    return s + (m.ig_feed?.impressions || 0) + storyImp + (m.ig_reel?.views || 0) + (m.tiktok?.views || 0);
   }, 0);
   const totalEngagements = athletes.reduce((s, a) => {
     const m = a.metrics || {};
@@ -146,7 +151,7 @@ export default function TrackerEditor() {
       {/* Summary Stats */}
       {totalAthletes > 0 && (
         <div className="px-8 py-4 border-b border-gray-800 bg-white/[0.02]">
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-5 gap-6">
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Athletes</div>
               <div className="text-2xl font-black">{totalAthletes}</div>
@@ -159,6 +164,12 @@ export default function TrackerEditor() {
               <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Total Impressions</div>
               <div className="text-2xl font-black">{fmt(totalImpressions)}</div>
             </div>
+            {totalStoryImpressions > 0 && (
+            <div>
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Total Story Impressions</div>
+              <div className="text-2xl font-black">{fmt(totalStoryImpressions)}</div>
+            </div>
+            )}
             <div>
               <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Total Engagements</div>
               <div className="text-2xl font-black">{fmt(totalEngagements)}</div>
