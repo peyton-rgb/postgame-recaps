@@ -223,6 +223,8 @@ export interface PressArticle {
   featured: boolean;
   published: boolean;
   published_date: string | null;
+    brand_logo_url: string | null;
+    logo_position: "bottom-left" | "bottom-right";
   sort_order: number;
   archived: boolean;
   show_logo: boolean;
