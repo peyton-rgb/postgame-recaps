@@ -37,7 +37,7 @@ export default async function PressPage() {
       {/* Header */}
       <div className="border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-16 text-center">
-          <img src="/postgame-logo-black.png" alt="Postgame" className="h-6 md:h-8 object-contain mx-auto mb-4" />
+          <img src="/postgame-logo-black.png" alt="Postgame" className="h-10 md:h-14 object-contain mx-auto mb-4" />
           <h1 className="text-5xl md:text-7xl font-black text-gray-900" style={{ fontFamily: "Arial, sans-serif" }}>
             Press & News
           </h1>
