@@ -545,7 +545,7 @@ export function CampaignRecap({
                     <div className="text-2xl font-black text-brand">{metricValue}</div>
                     <div className="text-[10px] text-white/70 font-bold uppercase tracking-wider">{metricLabel}</div>
                   </div>
-                  <div className={`relative rounded-xl overflow-hidden h-[380px] ${isFirst ? "border-2 border-brand shadow-[0_0_25px_rgba(215,63,9,0.3)]" : "border border-white/[0.12]"}`}>
+                  <div className="relative rounded-xl overflow-hidden h-[380px] border-2 border-brand shadow-[0_0_25px_rgba(215,63,9,0.3)]">
                     {items.length > 0 ? (
                       <TopPerformerMedia items={items} name={a.name} />
                     ) : (
@@ -554,7 +554,7 @@ export function CampaignRecap({
                       </div>
                     )}
                     {/* Rank badge */}
-                    <div className={`absolute top-3 left-3 w-9 h-9 rounded-full text-white text-base font-black flex items-center justify-center z-10 ${isFirst ? "bg-brand" : "bg-white/20 backdrop-blur"}`}>
+                    <div className="absolute top-3 left-3 w-9 h-9 rounded-full text-white text-base font-black flex items-center justify-center z-10 bg-brand">
                       {i + 1}
                     </div>
                   </div>
@@ -581,7 +581,7 @@ export function CampaignRecap({
                     <div className={`${isFirst ? "text-xl" : "text-lg"} font-black text-brand`}>{metricValue}</div>
                     <div className="text-[10px] text-white/70 font-bold uppercase tracking-wider">{metricLabel}</div>
                   </div>
-                  <div className={`relative rounded-xl overflow-hidden ${isFirst ? "h-[280px] border-2 border-brand shadow-[0_0_20px_rgba(215,63,9,0.3)]" : "h-[220px] border border-white/[0.12]"}`}>
+                  <div className={`relative rounded-xl overflow-hidden border-2 border-brand shadow-[0_0_20px_rgba(215,63,9,0.3)] ${isFirst ? "h-[280px]" : "h-[220px]"}`}>
                     {items.length > 0 ? (
                       <TopPerformerMedia items={items} name={a.name} />
                     ) : (
@@ -589,7 +589,7 @@ export function CampaignRecap({
                         <span className="text-xs text-white/35 font-bold uppercase">No content</span>
                       </div>
                     )}
-                    <div className={`absolute top-2.5 left-2.5 w-8 h-8 rounded-full text-white text-sm font-black flex items-center justify-center z-10 ${isFirst ? "bg-brand" : "bg-white/20 backdrop-blur"}`}>
+                    <div className="absolute top-2.5 left-2.5 w-8 h-8 rounded-full text-white text-sm font-black flex items-center justify-center z-10 bg-brand">
                       {i + 1}
                     </div>
                   </div>
