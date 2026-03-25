@@ -41,7 +41,7 @@ export default async function PressPage() {
           <h1 className="text-5xl md:text-7xl font-black text-gray-900" style={{ fontFamily: "Arial, sans-serif" }}>
             Press & News
           </h1>
-          <p className="text-gray-400 text-base md:text-lg mt-3 text-center">Your source for all the latest press coverage and media highlights from Postgame NIL campaigns.</p>
+          <p className="text-gray-400 text-sm md:text-base mt-2 max-w-2xl">Your source for all the latest press coverage and media highlights from Postgame NIL campaigns.</p>
           <div className="w-16 h-0.5 bg-[#D73F09] mx-auto mt-6" />
         </div>
       </div>
@@ -70,7 +70,7 @@ export default async function PressPage() {
                   />
                   {highlightedArticle.show_logo && (
                     <div className={`absolute bottom-3 ${highlightedArticle.logo_position === "bottom-right" ? "right-3" : "left-3"} flex items-center gap-2 drop-shadow-lg`}>
-                      <img src="/postgame-logo-white.png" alt="Postgame" className="h-4 md:h-5 object-contain" />
+                      <img src="/postgame-logo-white.png" alt="Postgame" className="h-6 md:h-8 object-contain" />
                       {highlightedArticle.brand_logo_url && (
                         <>
                           <span className="text-white/60 text-xs font-bold">×</span>
@@ -134,7 +134,7 @@ export default async function PressPage() {
                     />
                     {article.show_logo && (
                       <div className={`absolute bottom-2 ${article.logo_position === "bottom-right" ? "right-2" : "left-2"} flex items-center gap-1.5 drop-shadow-lg`}>
-                        <img src="/postgame-logo-white.png" alt="Postgame" className="h-3 md:h-4 object-contain" />
+                        <img src="/postgame-logo-white.png" alt="Postgame" className="h-5 md:h-6 object-contain" />
                         {article.brand_logo_url && (
                           <>
                             <span className="text-white/60 text-[10px] font-bold">×</span>
