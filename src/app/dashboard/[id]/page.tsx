@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { createBrowserSupabase } from "@/lib/supabase";
 import type { Campaign, Athlete, Media, VisibleSections, KpiTargets } from "@/lib/types";
@@ -19,7 +19,7 @@ const SECTION_LABELS: { key: keyof VisibleSections; label: string }[] = [
   { key: "metrics", label: "Campaign Metrics" },
   { key: "platform_breakdown", label: "Platform Breakdown" },
   { key: "top_performers", label: "Top Performers" },
-  { key: "content_gallery", label: "Content Gallery" },
+  { key: "content_gallery", label: "Best In Class Content" },
   { key: "roster", label: "Campaign Roster" },
 ];
 
@@ -280,6 +280,45 @@ export default function CampaignEditor() {
     if (data) setCampaign(data);
     setSavingInfo(false);
   }
+
+  // Auto-save campaign info with debounce
+  const autoSaveTimer = useRef<NodeJS.Timeout | null>(null);
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    // Skip auto-save during initial data load
+    if (!campaign || !initialLoadDone.current) return;
+
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(async () => {
+      const newSettings = {
+        ...campaign.settings,
+        description, quarter, campaign_type: campaignType,
+        platform, tags, visible_sections: visibleSections,
+        brand_logo_url: brandLogoUrl,
+        key_takeaways: keyTakeaways,
+        kpi_targets: kpiTargets,
+      };
+      const { data } = await supabase
+        .from("campaigns")
+        .update({ settings: newSettings })
+        .eq("id", campaign.id)
+        .select()
+        .single();
+      if (data) setCampaign(data);
+    }, 1500);
+
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [description, quarter, campaignType, platform, tags, visibleSections, brandLogoUrl, keyTakeaways, kpiTargets]);
+
+  // Mark initial load as done after campaign data is populated
+  useEffect(() => {
+    if (campaign && !initialLoadDone.current) {
+      // Small delay to let all state setters finish from loadData
+      const t = setTimeout(() => { initialLoadDone.current = true; }, 500);
+      return () => clearTimeout(t);
+    }
+  }, [campaign]);
 
   async function saveMetrics(rows: { _key: string; _isNew: boolean; id?: string; name: string; ig_handle: string; ig_followers: number | ""; school: string; sport: string; gender: string; content_rating: string; reach_level: string; notes: string; post_type: string; metrics: import("@/lib/types").AthleteMetrics }[], deletedIds: string[]) {
     setSavingMetrics(true);
@@ -923,10 +962,7 @@ export default function CampaignEditor() {
               </div>
             </div>
 
-            <button onClick={saveCampaignInfo} disabled={savingInfo}
-              className="px-6 py-2.5 bg-[#D73F09] rounded-lg text-sm font-bold text-white hover:bg-[#c43808] disabled:opacity-50">
-              {savingInfo ? "Saving..." : "Save Campaign Info"}
-            </button>
+            <div className="text-xs text-gray-500 italic">Changes are saved automatically</div>
           </div>
         )}
 

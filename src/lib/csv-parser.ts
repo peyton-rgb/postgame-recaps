@@ -62,7 +62,11 @@ function findCol(headers: string[], ...names: string[]): number {
     const idx = headers.findIndex((h) => {
       const hClean = h.toLowerCase().replace(/[^a-z0-9]/g, "");
       if (!hClean) return false; // Skip empty headers
-      return hClean === lower || hClean.includes(lower) || lower.includes(hClean);
+      // Exact match or header contains the full search term
+      // NOTE: We intentionally do NOT check lower.includes(hClean) because
+      // generic headers like "Views" would falsely match "tiktokviews",
+      // "igfeedreach" would match "reach", etc., causing cross-platform data duplication.
+      return hClean === lower || hClean.includes(lower);
     });
     if (idx !== -1) return idx;
   }

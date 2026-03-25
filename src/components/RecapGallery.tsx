@@ -185,7 +185,7 @@ export function RecapGallery({
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-5">
-            <h2 className="text-xl font-black">Content Gallery</h2>
+            <h2 className="text-xl font-black">Best In Class Content</h2>
             <div className="flex gap-2">
               {["all", "photo", "video"].map((f) => (
                 <button

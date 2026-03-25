@@ -386,6 +386,22 @@ export default function MetricsSpreadsheet({ athletes, campaignId, onSave, savin
 
           if (existingIdx != null) {
             const row = updated[existingIdx];
+            // Deep-merge metrics: only overwrite fields the CSV actually has data for
+            const existingMetrics = row.metrics || {};
+            const csvMetrics = pa.metrics || {};
+            const mergedMetrics: Record<string, any> = { ...existingMetrics };
+            for (const platform of Object.keys(csvMetrics) as string[]) {
+              const csvPlatform = (csvMetrics as any)[platform];
+              if (!csvPlatform || typeof csvPlatform !== "object") continue;
+              const existingPlatform = (existingMetrics as any)[platform] || {};
+              const mergedPlatform = { ...existingPlatform };
+              for (const [field, value] of Object.entries(csvPlatform)) {
+                if (value != null && value !== "" && value !== 0) {
+                  mergedPlatform[field] = value;
+                }
+              }
+              mergedMetrics[platform] = mergedPlatform;
+            }
             updated[existingIdx] = {
               ...row,
               ig_handle: pa.ig_handle || row.ig_handle,
@@ -396,7 +412,7 @@ export default function MetricsSpreadsheet({ athletes, campaignId, onSave, savin
               content_rating: pa.content_rating || row.content_rating,
               reach_level: pa.reach_level || row.reach_level,
               notes: pa.notes || row.notes,
-              metrics: autoFillMetrics(pa.metrics),
+              metrics: autoFillMetrics(mergedMetrics as any),
             };
           } else {
             newRows.push({
