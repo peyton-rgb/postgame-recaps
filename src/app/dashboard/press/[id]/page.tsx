@@ -84,7 +84,6 @@ export default function PressEditor() {
       }
     }
     setUploading(false);
-    // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -201,20 +200,19 @@ export default function PressEditor() {
           <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">Article Image</label>
           <div className="space-y-3">
             {imageUrl && (
-              <div className="rounded-lg overflow-hidden bg-gray-900 border border-gray-700 flex items-center justify-center">
-                <div className="relative inline-flex w-full">
-                  <img src={imageUrl} alt="Article preview" className="w-full h-auto max-h-64 object-contain" />
+              <div className="relative rounded-lg overflow-hidden bg-gray-900 border border-gray-700">
+                  <img src={imageUrl} alt="Article preview" className="w-full h-64 object-cover" />
                   {showLogo && (
                     <div className={`absolute bottom-3 ${logoPosition === "bottom-right" ? "right-3" : "left-3"} flex items-center gap-2 drop-shadow-lg`}>
                       <img src="/postgame-logo-white.png" alt="Postgame" className="h-5 object-contain" />
-                    {brandLogoUrl && (
-                      <>
-                        <span className="text-white/60 text-xs font-bold">×</span>
-                        <img src={brandLogoUrl} alt="Brand" className="h-5 object-contain" />
-                      </>
-                    )}
-                  </div>
-                )}
+                      {brandLogoUrl && (
+                        <>
+                          <span className="text-white/60 text-xs font-bold">×</span>
+                          <img src={brandLogoUrl} alt="Brand" className="h-5 object-contain" />
+                        </>
+                      )}
+                    </div>
+                  )}
                   <button
                     onClick={() => setImageUrl("")}
                     className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-600/80 transition-colors"
@@ -225,7 +223,6 @@ export default function PressEditor() {
                       <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
                   </button>
-                </div>
               </div>
             )}
             <div className="flex gap-3">
