@@ -18,11 +18,14 @@ export default async function PressPage() {
     .order("published_date", { ascending: false });
 
   const allArticles = (articles || []) as PressArticle[];
+  // Most recent article is auto-highlighted at the top
   const highlightedArticle = allArticles.length > 0 ? allArticles[0] : null;
   const rest = allArticles.slice(1);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#FAFAF8", fontFamily: "Arial, sans-serif" }}>
+      {/* Fonts */}
+
       {/* Header */}
       <div className="border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-6 py-16 text-center">
@@ -34,6 +37,7 @@ export default async function PressPage() {
         </div>
       </div>
 
+      {/* Highlighted (Most Recent) Article */}
       {highlightedArticle && (
         <section className="max-w-6xl mx-auto px-6 py-16">
           <div className="mb-6">
@@ -56,11 +60,15 @@ export default async function PressPage() {
                     className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   {highlightedArticle.show_logo && (
-                    <img
-                      src="/postgame-logo-white.png"
-                      alt="Postgame"
-                      className="absolute bottom-3 left-3 h-4 md:h-5 object-contain drop-shadow-lg"
-                    />
+                    <div className={`absolute bottom-3 ${highlightedArticle.logo_position === "bottom-right" ? "right-3" : "left-3"} flex items-center gap-2 drop-shadow-lg`}>
+                      <img src="/postgame-logo-white.png" alt="Postgame" className="h-4 md:h-5 object-contain" />
+                      {highlightedArticle.brand_logo_url && (
+                        <>
+                          <span className="text-white/60 text-xs font-bold">×</span>
+                          <img src={highlightedArticle.brand_logo_url} alt="" className="h-4 md:h-5 object-contain" />
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -87,7 +95,7 @@ export default async function PressPage() {
                   {highlightedArticle.publication && (
                     <span className="font-bold">{highlightedArticle.publication}</span>
                   )}
-                  {highlightedArticle.author && highlightedArticle.publication && <span>\u00b7</span>}
+                  {highlightedArticle.author && highlightedArticle.publication && <span>·</span>}
                   {highlightedArticle.author && <span>{highlightedArticle.author}</span>}
                 </div>
               </div>
@@ -96,6 +104,7 @@ export default async function PressPage() {
         </section>
       )}
 
+      {/* Article Grid */}
       {rest.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-20">
           <div className="columns-1 md:columns-2 lg:columns-3 gap-8" style={{ columnFill: "balance" }}>
@@ -115,11 +124,15 @@ export default async function PressPage() {
                       className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     {article.show_logo && (
-                      <img
-                        src="/postgame-logo-white.png"
-                        alt="Postgame"
-                        className="absolute bottom-2 left-2 h-3 md:h-4 object-contain drop-shadow-lg"
-                      />
+                      <div className={`absolute bottom-2 ${article.logo_position === "bottom-right" ? "right-2" : "left-2"} flex items-center gap-1.5 drop-shadow-lg`}>
+                        <img src="/postgame-logo-white.png" alt="Postgame" className="h-3 md:h-4 object-contain" />
+                        {article.brand_logo_url && (
+                          <>
+                            <span className="text-white/60 text-[10px] font-bold">×</span>
+                            <img src={article.brand_logo_url} alt="" className="h-3 md:h-4 object-contain" />
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
@@ -143,7 +156,7 @@ export default async function PressPage() {
                 )}
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   {article.publication && <span className="font-bold">{article.publication}</span>}
-                  {article.author && article.publication && <span>\u00b7</span>}
+                  {article.author && article.publication && <span>·</span>}
                   {article.author && <span>{article.author}</span>}
                 </div>
               </a>
