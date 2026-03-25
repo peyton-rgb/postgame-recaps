@@ -14,7 +14,6 @@ export default async function PressPage() {
     .from("press_articles")
     .select("*")
     .eq("published", true)
-    .order("sort_order", { ascending: true })
     .order("published_date", { ascending: false });
 
   const allArticles = (articles || []) as PressArticle[];
@@ -47,11 +46,11 @@ export default async function PressPage() {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               {featuredArticle.image_url && (
-                <div className="aspect-[4/5] rounded-xl overflow-hidden bg-gray-100">
+                <div className="rounded-xl overflow-hidden bg-gray-100">
                   <img
                     src={featuredArticle.image_url}
                     alt={featuredArticle.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
               )}
@@ -90,21 +89,21 @@ export default async function PressPage() {
       {/* Article Grid */}
       {rest.length > 0 && (
         <section className="max-w-6xl mx-auto px-6 pb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-8" style={{ columnFill: "balance" }}>
             {rest.map((article) => (
               <a
                 key={article.id}
                 href={article.external_url || "#"}
                 target={article.external_url ? "_blank" : undefined}
                 rel="noopener noreferrer"
-                className="block group"
+                className="block group mb-8 break-inside-avoid"
               >
                 {article.image_url && (
-                  <div className="aspect-[4/5] rounded-lg overflow-hidden bg-gray-100 mb-4">
+                  <div className="rounded-lg overflow-hidden bg-gray-100 mb-4">
                     <img
                       src={article.image_url}
                       alt={article.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                   </div>
                 )}
