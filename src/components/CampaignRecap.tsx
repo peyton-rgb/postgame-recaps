@@ -455,6 +455,7 @@ export function CampaignRecap({
                 </div>
                 <div className="space-y-0">
                   {[
+                    { label: "Total Posts", value: String(stats.igFeedPosts), raw: stats.igFeedPosts, col: "ig_feed_post_url" },
                     { label: "Reach", value: fmt(stats.igFeed.reach), raw: stats.igFeed.reach, col: "ig_feed_reach" },
                     { label: "Impressions", value: fmt(stats.igFeed.impressions), raw: stats.igFeed.impressions, col: "ig_feed_impressions" },
                     { label: "Likes", value: fmt(stats.igFeed.likes), raw: stats.igFeed.likes, col: "ig_feed_likes" },
@@ -481,6 +482,7 @@ export function CampaignRecap({
                 </div>
                 <div className="space-y-0">
                   {[
+                    { label: "Total Posts", value: String(stats.igReelPosts), raw: stats.igReelPosts, col: "ig_reel_post_url" },
                     { label: "Views", value: fmt(stats.igReel.views), raw: stats.igReel.views, col: "ig_reel_views" },
                     { label: "Likes", value: fmt(stats.igReel.likes), raw: stats.igReel.likes, col: "ig_reel_likes" },
                     { label: "Comments", value: fmt(stats.igReel.comments), raw: stats.igReel.comments, col: "ig_reel_comments" },
