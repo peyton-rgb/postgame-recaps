@@ -455,15 +455,15 @@ export function CampaignRecap({
                 </div>
                 <div className="space-y-0">
                   {[
-                    { label: "Reach", value: fmt(stats.igFeed.reach), raw: stats.igFeed.reach },
-                    { label: "Impressions", value: fmt(stats.igFeed.impressions), raw: stats.igFeed.impressions },
-                    { label: "Likes", value: fmt(stats.igFeed.likes), raw: stats.igFeed.likes },
-                    { label: "Comments", value: fmt(stats.igFeed.comments), raw: stats.igFeed.comments },
-                    { label: "Shares", value: fmt(stats.igFeed.shares), raw: stats.igFeed.shares },
-                    { label: "Reposts", value: fmt(stats.igFeed.reposts), raw: stats.igFeed.reposts },
-                    { label: "Total Engagements", value: fmt(stats.igFeed.engagements), raw: stats.igFeed.engagements },
-                    { label: "Avg Engagement Rate", value: stats.igFeed.engRateCount > 0 ? pct(stats.igFeed.engRateSum / stats.igFeed.engRateCount) : "\u2014", raw: stats.igFeed.engRateCount },
-                  ].filter((row) => row.raw > 0).map((row) => (
+                    { label: "Reach", value: fmt(stats.igFeed.reach), raw: stats.igFeed.reach, col: "ig_feed_reach" },
+                    { label: "Impressions", value: fmt(stats.igFeed.impressions), raw: stats.igFeed.impressions, col: "ig_feed_impressions" },
+                    { label: "Likes", value: fmt(stats.igFeed.likes), raw: stats.igFeed.likes, col: "ig_feed_likes" },
+                    { label: "Comments", value: fmt(stats.igFeed.comments), raw: stats.igFeed.comments, col: "ig_feed_comments" },
+                    { label: "Shares", value: fmt(stats.igFeed.shares), raw: stats.igFeed.shares, col: "ig_feed_shares" },
+                    { label: "Reposts", value: fmt(stats.igFeed.reposts), raw: stats.igFeed.reposts, col: "ig_feed_reposts" },
+                    { label: "Total Engagements", value: fmt(stats.igFeed.engagements), raw: stats.igFeed.engagements, col: "ig_feed_total" },
+                    { label: "Avg Engagement Rate", value: stats.igFeed.engRateCount > 0 ? pct(stats.igFeed.engRateSum / stats.igFeed.engRateCount) : "\u2014", raw: stats.igFeed.engRateCount, col: "ig_feed_rate" },
+                  ].filter((row) => row.raw > 0 && showCol(row.col)).map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-2 border-b border-white/[0.10] last:border-0">
                       <span className="text-xs text-white/70 font-semibold">{row.label}</span>
                       <span className="text-base font-bold text-white/90">{row.value}</span>
@@ -481,14 +481,14 @@ export function CampaignRecap({
                 </div>
                 <div className="space-y-0">
                   {[
-                    { label: "Views", value: fmt(stats.igReel.views), raw: stats.igReel.views },
-                    { label: "Likes", value: fmt(stats.igReel.likes), raw: stats.igReel.likes },
-                    { label: "Comments", value: fmt(stats.igReel.comments), raw: stats.igReel.comments },
-                    { label: "Shares", value: fmt(stats.igReel.shares), raw: stats.igReel.shares },
-                    { label: "Reposts", value: fmt(stats.igReel.reposts), raw: stats.igReel.reposts },
-                    { label: "Total Engagements", value: fmt(stats.igReel.engagements), raw: stats.igReel.engagements },
-                    { label: "Avg Engagement Rate", value: stats.igReel.engRateCount > 0 ? pct(stats.igReel.engRateSum / stats.igReel.engRateCount) : "\u2014", raw: stats.igReel.engRateCount },
-                  ].filter((row) => row.raw > 0).map((row) => (
+                    { label: "Views", value: fmt(stats.igReel.views), raw: stats.igReel.views, col: "ig_reel_views" },
+                    { label: "Likes", value: fmt(stats.igReel.likes), raw: stats.igReel.likes, col: "ig_reel_likes" },
+                    { label: "Comments", value: fmt(stats.igReel.comments), raw: stats.igReel.comments, col: "ig_reel_comments" },
+                    { label: "Shares", value: fmt(stats.igReel.shares), raw: stats.igReel.shares, col: "ig_reel_shares" },
+                    { label: "Reposts", value: fmt(stats.igReel.reposts), raw: stats.igReel.reposts, col: "ig_reel_reposts" },
+                    { label: "Total Engagements", value: fmt(stats.igReel.engagements), raw: stats.igReel.engagements, col: "ig_reel_total" },
+                    { label: "Avg Engagement Rate", value: stats.igReel.engRateCount > 0 ? pct(stats.igReel.engRateSum / stats.igReel.engRateCount) : "\u2014", raw: stats.igReel.engRateCount, col: "ig_reel_rate" },
+                  ].filter((row) => row.raw > 0 && showCol(row.col)).map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-2 border-b border-white/[0.10] last:border-0">
                       <span className="text-xs text-white/70 font-semibold">{row.label}</span>
                       <span className="text-base font-bold text-white/90">{row.value}</span>
@@ -506,14 +506,14 @@ export function CampaignRecap({
                 </div>
                 <div className="space-y-0">
                   {[
-                    { label: "Views", value: fmt(stats.tiktok.views), raw: stats.tiktok.views },
-                    { label: "Likes", value: fmt(stats.tiktok.likes), raw: stats.tiktok.likes },
-                    { label: "Comments", value: fmt(stats.tiktok.comments), raw: stats.tiktok.comments },
-                    { label: "Likes + Comments", value: fmt(stats.tiktok.likes_comments), raw: stats.tiktok.likes > 0 ? 0 : stats.tiktok.likes_comments },
-                    { label: "Saves + Shares", value: fmt(stats.tiktok.saves_shares), raw: stats.tiktok.saves_shares },
-                    { label: "Total Engagements", value: fmt(stats.tiktok.engagements), raw: stats.tiktok.engagements },
-                    { label: "Avg Engagement Rate", value: stats.tiktok.engRateCount > 0 ? pct(stats.tiktok.engRateSum / stats.tiktok.engRateCount) : "\u2014", raw: stats.tiktok.engRateCount },
-                  ].filter((row) => row.raw > 0).map((row) => (
+                    { label: "Views", value: fmt(stats.tiktok.views), raw: stats.tiktok.views, col: "tiktok_views" },
+                    { label: "Likes", value: fmt(stats.tiktok.likes), raw: stats.tiktok.likes, col: "tiktok_likes" },
+                    { label: "Comments", value: fmt(stats.tiktok.comments), raw: stats.tiktok.comments, col: "tiktok_comments" },
+                    { label: "Likes + Comments", value: fmt(stats.tiktok.likes_comments), raw: stats.tiktok.likes > 0 ? 0 : stats.tiktok.likes_comments, col: "tiktok_likes_comments" },
+                    { label: "Saves + Shares", value: fmt(stats.tiktok.saves_shares), raw: stats.tiktok.saves_shares, col: "tiktok_saves_shares" },
+                    { label: "Total Engagements", value: fmt(stats.tiktok.engagements), raw: stats.tiktok.engagements, col: "tiktok_total" },
+                    { label: "Avg Engagement Rate", value: stats.tiktok.engRateCount > 0 ? pct(stats.tiktok.engRateSum / stats.tiktok.engRateCount) : "\u2014", raw: stats.tiktok.engRateCount, col: "tiktok_rate" },
+                  ].filter((row) => row.raw > 0 && showCol(row.col)).map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-2 border-b border-white/[0.10] last:border-0">
                       <span className="text-xs text-white/70 font-semibold">{row.label}</span>
                       <span className="text-base font-bold text-white/90">{row.value}</span>
@@ -530,9 +530,9 @@ export function CampaignRecap({
                 </div>
                 <div className="space-y-0">
                   {[
-                    { label: "Story Count", value: fmt(stats.igStory.count) },
-                    { label: "Impressions", value: fmt(stats.igStory.impressions) },
-                  ].map((row) => (
+                    { label: "Story Count", value: fmt(stats.igStory.count), col: "ig_story_count" },
+                    { label: "Impressions", value: fmt(stats.igStory.impressions), col: "ig_story_impressions" },
+                  ].filter((row) => showCol(row.col)).map((row) => (
                     <div key={row.label} className="flex items-center justify-between py-2 border-b border-white/[0.10] last:border-0">
                       <span className="text-xs text-white/70 font-semibold">{row.label}</span>
                       <span className="text-base font-bold text-white/90">{row.value}</span>
