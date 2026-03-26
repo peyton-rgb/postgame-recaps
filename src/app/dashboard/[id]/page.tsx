@@ -1091,22 +1091,109 @@ export default function CampaignEditor() {
 
         {/* ── STEP 3: Select Posts ─────────────────────────── */}
         {step === 3 && (
-          <div className="space-y-1">
-            {athletes.map((a) => {
+          <div className="space-y-4">
+            {/* Featured Athletes Section (Top 50 campaigns only) */}
+            {campaignType === "top_50" && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#D73F09"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  <span className="text-sm font-black uppercase text-[#D73F09]">Featured Athletes</span>
+                  <span className="text-xs text-gray-500">(click to toggle, drag to reorder)</span>
+                </div>
+
+                {/* Currently featured */}
+                <div className="space-y-1 mb-3">
+                  {athletes
+                    .filter((a: any) => a.is_featured)
+                    .sort((a: any, b: any) => (a.featured_order || 0) - (b.featured_order || 0))
+                    .map((a: any, idx: number) => (
+                      <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg bg-[#D73F09]/10 border border-[#D73F09]/30">
+                        <span className="text-lg font-black text-[#D73F09] w-8 text-center">#{idx + 1}</span>
+                        <SchoolBadge school={a.school} size={32} />
+                        <div className="flex-1">
+                          <div className="text-sm font-black uppercase">{a.name}</div>
+                          <div className="text-xs text-gray-500">{a.school} · {a.sport}</div>
+                        </div>
+                        {/* Move up/down */}
+                        <button
+                          className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                          onClick={async () => {
+                            if (idx === 0) return;
+                            const featured = athletes.filter((x: any) => x.is_featured).sort((x: any, y: any) => (x.featured_order || 0) - (y.featured_order || 0));
+                            const prev = featured[idx - 1];
+                            await supabase.from("athletes").update({ featured_order: idx }).eq("id", a.id);
+                            await supabase.from("athletes").update({ featured_order: idx + 1 }).eq("id", prev.id);
+                            setAthletes((p: any[]) => p.map((x) => x.id === a.id ? { ...x, featured_order: idx } : x.id === prev.id ? { ...x, featured_order: idx + 1 } : x));
+                          }}>
+                          ▲
+                        </button>
+                        <button
+                          className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10"
+                          onClick={async () => {
+                            const featured = athletes.filter((x: any) => x.is_featured).sort((x: any, y: any) => (x.featured_order || 0) - (y.featured_order || 0));
+                            if (idx >= featured.length - 1) return;
+                            const next = featured[idx + 1];
+                            await supabase.from("athletes").update({ featured_order: idx + 2 }).eq("id", a.id);
+                            await supabase.from("athletes").update({ featured_order: idx + 1 }).eq("id", next.id);
+                            setAthletes((p: any[]) => p.map((x) => x.id === a.id ? { ...x, featured_order: idx + 2 } : x.id === next.id ? { ...x, featured_order: idx + 1 } : x));
+                          }}>
+                          ▼
+                        </button>
+                        {/* Remove from featured */}
+                        <button
+                          className="text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded bg-white/5 hover:bg-red-500/10"
+                          onClick={async () => {
+                            await supabase.from("athletes").update({ is_featured: false, featured_order: 0 }).eq("id", a.id);
+                            setAthletes((p: any[]) => p.map((x) => x.id === a.id ? { ...x, is_featured: false, featured_order: 0 } : x));
+                          }}>
+                          ✕ Remove
+                        </button>
+                      </div>
+                    ))}
+                  {athletes.filter((a: any) => a.is_featured).length === 0 && (
+                    <div className="text-xs text-gray-500 italic p-3">No featured athletes selected. Click the star on any athlete below to feature them.</div>
+                  )}
+                </div>
+                <div className="h-px bg-gray-800 my-4" />
+              </div>
+            )}
+
+            {/* All athletes list */}
+            {athletes.map((a: any) => {
               const on = selected.includes(a.id);
+              const isFeatured = campaignType === "top_50" && a.is_featured;
               return (
-                <div key={a.id} onClick={() => setSelected((prev) => on ? prev.filter((x) => x !== a.id) : [...prev, a.id])}
-                  className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer border ${on ? "bg-[#D73F09]/5 border-[#D73F09]/30" : "bg-[#111] border-gray-800"}`}>
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${on ? "bg-[#D73F09] border-[#D73F09]" : "border-gray-600"}`}>
-                    {on && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                <div key={a.id} className={`flex items-center gap-4 p-3 rounded-lg cursor-pointer border ${on ? "bg-[#D73F09]/5 border-[#D73F09]/30" : "bg-[#111] border-gray-800"}`}>
+                  {/* Featured star (Top 50 only) */}
+                  {campaignType === "top_50" && (
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const newFeatured = !a.is_featured;
+                        const featuredCount = athletes.filter((x: any) => x.is_featured).length;
+                        const newOrder = newFeatured ? featuredCount + 1 : 0;
+                        await supabase.from("athletes").update({ is_featured: newFeatured, featured_order: newOrder }).eq("id", a.id);
+                        setAthletes((p: any[]) => p.map((x) => x.id === a.id ? { ...x, is_featured: newFeatured, featured_order: newOrder } : x));
+                      }}
+                      className="flex-shrink-0"
+                      title={isFeatured ? "Remove from featured" : "Add to featured"}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={isFeatured ? "#D73F09" : "none"} stroke={isFeatured ? "#D73F09" : "#555"} strokeWidth="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </button>
+                  )}
+                  <div onClick={() => setSelected((prev) => on ? prev.filter((x) => x !== a.id) : [...prev, a.id])} className="flex items-center gap-4 flex-1">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${on ? "bg-[#D73F09] border-[#D73F09]" : "border-gray-600"}`}>
+                      {on && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
+                    </div>
+                    <SchoolBadge school={a.school} size={32} />
+                    <div className="flex-1">
+                      <div className="text-sm font-black uppercase">{a.name}</div>
+                      <div className="text-xs text-gray-500">{a.school} · {a.sport}</div>
+                    </div>
+                    {a.ig_followers ? <span className="text-xs text-gray-500 font-bold">{a.ig_followers.toLocaleString()}</span> : null}
+                    <span className="text-xs text-gray-600 font-bold uppercase">{a.post_type}</span>
                   </div>
-                  <SchoolBadge school={a.school} size={32} />
-                  <div className="flex-1">
-                    <div className="text-sm font-black uppercase">{a.name}</div>
-                    <div className="text-xs text-gray-500">{a.school} · {a.sport}</div>
-                  </div>
-                  {a.ig_followers ? <span className="text-xs text-gray-500 font-bold">{a.ig_followers.toLocaleString()}</span> : null}
-                  <span className="text-xs text-gray-600 font-bold uppercase">{a.post_type}</span>
                 </div>
               );
             })}

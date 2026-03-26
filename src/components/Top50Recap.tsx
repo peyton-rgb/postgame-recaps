@@ -243,8 +243,20 @@ export function Top50Recap({
   const sports = useMemo(() => [...new Set(athletes.map((a) => a.sport).filter(Boolean))].sort(), [athletes]);
   const uniCount = useMemo(() => new Set(athletes.map((a) => a.school)).size, [athletes]);
 
-  const top3 = athletes.slice(0, 3);
-  const rest = athletes.slice(3);
+  // Featured athletes: those with is_featured flag, sorted by featured_order
+  const top3 = useMemo(() => {
+    const featured = athletes.filter((a: any) => a.is_featured);
+    if (featured.length > 0) {
+      return featured.sort((a: any, b: any) => (a.featured_order || 0) - (b.featured_order || 0));
+    }
+    // Fallback: first 3 by sort_order if no one is featured
+    return athletes.slice(0, 3);
+  }, [athletes]);
+
+  const rest = useMemo(() => {
+    const featuredIds = new Set(top3.map((a) => a.id));
+    return athletes.filter((a) => !featuredIds.has(a.id));
+  }, [athletes, top3]);
 
   // Filter roster
   const filteredRest = useMemo(() => {
