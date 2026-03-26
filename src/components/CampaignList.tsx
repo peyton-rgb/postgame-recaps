@@ -7,11 +7,13 @@ import type { Campaign } from "@/lib/types";
 import { parseMetricsCSV } from "@/lib/csv-parser";
 import { autoFillMetrics } from "@/lib/metrics-helpers";
 import Link from "next/link";
+import ViewToggle, { type ViewMode } from "./ViewToggle";
 
 export default function CampaignList() {
   const router = useRouter();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("card");
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newClient, setNewClient] = useState("");
@@ -165,8 +167,9 @@ export default function CampaignList() {
 
   return (
     <>
-      {/* Create button */}
-      <div className="flex justify-end mb-6">
+      {/* Header row with toggle + create button */}
+      <div className="flex items-center justify-between mb-6">
+        <ViewToggle mode={viewMode} onChange={setViewMode} />
         <button
           onClick={() => setShowCreate(true)}
           className="px-5 py-2 bg-[#D73F09] text-white text-sm font-bold rounded-lg hover:bg-[#B33407]"
@@ -364,55 +367,105 @@ export default function CampaignList() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {campaigns.map((c) => (
-            <div
-              key={c.id}
-              className="relative p-6 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors group"
-            >
-              <Link href={`/dashboard/${c.id}`} className="absolute inset-0 z-0" />
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                  {c.client_name}
-                </span>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-xs font-bold px-2 py-1 rounded ${
-                      c.published
-                        ? "bg-green-900/30 text-green-400"
-                        : "bg-gray-800 text-gray-500"
-                    }`}
-                  >
-                    {c.published ? "Published" : "Draft"}
+        {viewMode === "card" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {campaigns.map((c) => (
+              <div
+                key={c.id}
+                className="relative p-6 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors group"
+              >
+                <Link href={`/dashboard/${c.id}`} className="absolute inset-0 z-0" />
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    {c.client_name}
                   </span>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setConfirmDelete(c);
-                    }}
-                    className="relative z-10 w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all"
-                    title="Delete campaign"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded ${
+                        c.published
+                          ? "bg-green-900/30 text-green-400"
+                          : "bg-gray-800 text-gray-500"
+                      }`}
+                    >
+                      {c.published ? "Published" : "Draft"}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setConfirmDelete(c);
+                      }}
+                      className="relative z-10 w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all"
+                      title="Delete campaign"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
+                <h3 className="text-lg font-black mb-2">{c.name}</h3>
+                <p className="text-xs text-gray-600">
+                  {new Date(c.created_at).toLocaleDateString()}
+                  {c.published && (
+                    <span className="ml-2 text-[#D73F09]">
+                      /recap/{c.slug}
+                    </span>
+                  )}
+                </p>
               </div>
-              <h3 className="text-lg font-black mb-2">{c.name}</h3>
-              <p className="text-xs text-gray-600">
-                {new Date(c.created_at).toLocaleDateString()}
-                {c.published && (
-                  <span className="ml-2 text-[#D73F09]">
-                    /recap/{c.slug}
-                  </span>
-                )}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {campaigns.map((c) => (
+              <div
+                key={c.id}
+                className="relative flex items-center gap-4 px-5 py-4 bg-[#111] border border-gray-800 rounded-lg hover:border-gray-600 transition-colors group"
+              >
+                <Link href={`/dashboard/${c.id}`} className="absolute inset-0 z-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-sm font-bold truncate">{c.name}</h3>
+                    <span
+                      className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded ${
+                        c.published
+                          ? "bg-green-900/30 text-green-400"
+                          : "bg-gray-800 text-gray-500"
+                      }`}
+                    >
+                      {c.published ? "Published" : "Draft"}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs text-gray-500">{c.client_name}</span>
+                    <span className="text-[10px] text-gray-700">
+                      {new Date(c.created_at).toLocaleDateString()}
+                    </span>
+                    {c.published && (
+                      <span className="text-[10px] text-[#D73F09]">/recap/{c.slug}</span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setConfirmDelete(c);
+                  }}
+                  className="relative z-10 w-7 h-7 rounded-lg flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                  title="Delete campaign"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       )}
     </>
   );
