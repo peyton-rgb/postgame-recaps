@@ -552,14 +552,22 @@ export default function CampaignEditor() {
 
   async function setCoverPhoto(athleteId: string, mediaId: string) {
     const items = media[athleteId] || [];
-    const targetIndex = items.findIndex((m) => m.id === mediaId);
-    if (targetIndex <= 0) return; // already cover or not found
-    const newItems = [...items];
-    const [target] = newItems.splice(targetIndex, 1);
-    newItems.unshift(target);
-    // Update sort_order in DB
+    const target = items.find((m) => m.id === mediaId);
+    if (!target || target.type === "video") return; // only images can be covers
+
+    // Reorder: cover image first, then video, then remaining images
+    const video = items.find((m) => m.type === "video");
+    const otherImages = items.filter((m) => m.id !== mediaId && m.type !== "video");
+    const newItems = [target, ...(video ? [video] : []), ...otherImages];
+
+    // Update sort_order in DB and set cover as video thumbnail
     for (let i = 0; i < newItems.length; i++) {
       await supabase.from("media").update({ sort_order: i }).eq("id", newItems[i].id);
+    }
+    // Set the cover photo as the video's thumbnail
+    if (video) {
+      await supabase.from("media").update({ thumbnail_url: target.file_url }).eq("id", video.id);
+      video.thumbnail_url = target.file_url;
     }
     setMedia((prev) => ({ ...prev, [athleteId]: newItems }));
   }
@@ -662,6 +670,13 @@ export default function CampaignEditor() {
               .insert({ athlete_id: athlete.id, campaign_id: id, type: "image", file_url: url, sort_order: existing.length })
               .select().single();
             if (data) {
+              // Auto-set as video thumbnail if this is the first image and a video exists
+              const hasImageAlready = existing.some((m) => m.type === "image");
+              const video = existing.find((m) => m.type === "video" && !m.thumbnail_url);
+              if (!hasImageAlready && video) {
+                await supabase.from("media").update({ thumbnail_url: url }).eq("id", video.id);
+                video.thumbnail_url = url;
+              }
               setMedia((prev) => {
                 const current = prev[athlete.id] || [];
                 return { ...prev, [athlete.id]: [...current, data] };
@@ -1188,8 +1203,10 @@ export default function CampaignEditor() {
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                 {selectedAthletes.map((a) => {
                   const items = media[a.id] || [];
-                  const cover = items[0];
-                  const coverSrc = cover?.thumbnail_url || (cover?.type !== "video" ? cover?.file_url : null);
+                  // Always use the first image as cover (not video)
+                  const firstImage = items.find((m) => m.type === "image" || m.type !== "video");
+                  const cover = firstImage || items[0];
+                  const coverSrc = cover?.type !== "video" ? cover?.file_url : cover?.thumbnail_url;
 
                   return (
                     <div key={a.id} className="group relative">
