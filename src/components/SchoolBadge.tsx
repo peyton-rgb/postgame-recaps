@@ -12,6 +12,18 @@ const SCHOOL_COLORS: Record<string, string> = {
   "Florida International University": "#002F56", "Indiana University": "#990000",
   "University of Louisville": "#AD0000", "North Carolina State University": "#CC0000",
   "University of Deleware": "#00539F", "Jackson State University": "#002147",
+  // Top 50 schools
+  Florida: "#0021A5", Texas: "#BF5700", UCLA: "#2774AE", "South Carolina": "#73000A",
+  Alabama: "#9E1B32", "Kansas State": "#512888", Illinois: "#E84A27",
+  LSU: "#461D7C", FSU: "#782F40", "Wake Forrest": "#9E7E38", Oklahoma: "#841617",
+  Arizona: "#CC0033", Oregon: "#154733", "Prairie View A&M": "#510084",
+  USC: "#990000", Purdue: "#CEB888", UCONN: "#000E2F",
+  Auburn: "#0C2340", "Notre Dame": "#0C2340", UNC: "#7BAFD4",
+  Duke: "#003087", Gonzaga: "#002967", Michigan: "#00274C", Arkansas: "#9D2235",
+  Utah: "#CC0000", "Iowa State": "#C8102E", "Ole Miss": "#CE1126",
+  "LSU / Mariners": "#461D7C", "FSU / Athletics": "#782F40", "Wake Forrest / Twins": "#9E7E38",
+  "Oklahoma / Red Sox": "#841617", "Arizona / Rays": "#CC0033", "Alabama / Twins": "#9E1B32",
+  "Oregon / Reds": "#154733", "Notre Dame / TCU": "#0C2340",
 };
 
 const ABBREVS: Record<string, string> = {
@@ -29,6 +41,80 @@ const ABBREVS: Record<string, string> = {
   "University of Louisville": "UL", "North Carolina State University": "NCS",
   "University of Deleware": "DEL", "Jackson State University": "JSU",
 };
+
+// ESPN team IDs for logo CDN
+const ESPN_IDS: Record<string, number> = {
+  Florida: 57, Texas: 251, UCLA: 26, "South Carolina": 2579,
+  Alabama: 333, "Kansas State": 2306, "Texas Tech": 2641, Illinois: 356,
+  LSU: 99, FSU: 52, "Wake Forrest": 154, Oklahoma: 201,
+  Arizona: 12, Oregon: 2483, "Prairie View A&M": 2504,
+  USC: 30, Purdue: 2509, UCONN: 41, Washington: 264,
+  Kansas: 2305, Auburn: 2, "Notre Dame": 87, UNC: 153,
+  Duke: 150, Gonzaga: 2250, Michigan: 130, Arkansas: 8,
+  Utah: 254, "Iowa State": 66, "Ole Miss": 145,
+  Miami: 2390, Nebraska: 158, Indiana: 84, Louisville: 97,
+  "Nc State": 152, "Mississippi State": 344, "Arizona State": 9,
+  "Texas A&M": 245, Grambling: 2755, "Georiga Tech": 59,
+  // Dual entries
+  "LSU / Mariners": 99, "FSU / Athletics": 52, "Wake Forrest / Twins": 154,
+  "Oklahoma / Red Sox": 201, "Arizona / Rays": 12, "Alabama / Twins": 333,
+  "Oregon / Reds": 2483, "Notre Dame / TCU": 87,
+};
+
+const FULL_NAMES: Record<string, string> = {
+  Florida: "University of Florida", Texas: "University of Texas",
+  UCLA: "University of California, Los Angeles", "South Carolina": "University of South Carolina",
+  Alabama: "University of Alabama", "Kansas State": "Kansas State University",
+  "Texas Tech": "Texas Tech University", Illinois: "University of Illinois",
+  LSU: "Louisiana State University", FSU: "Florida State University",
+  "Wake Forrest": "Wake Forest University", Oklahoma: "University of Oklahoma",
+  Arizona: "University of Arizona", Oregon: "University of Oregon",
+  "Prairie View A&M": "Prairie View A&M University", USC: "University of Southern California",
+  Purdue: "Purdue University", UCONN: "University of Connecticut",
+  Washington: "University of Washington", Kansas: "University of Kansas",
+  Auburn: "Auburn University", "Notre Dame": "University of Notre Dame",
+  UNC: "University of North Carolina", Duke: "Duke University",
+  Gonzaga: "Gonzaga University", Michigan: "University of Michigan",
+  Arkansas: "University of Arkansas", Utah: "University of Utah",
+  "Iowa State": "Iowa State University", "Ole Miss": "University of Mississippi",
+  Miami: "University of Miami", Nebraska: "University of Nebraska",
+  Indiana: "Indiana University", Louisville: "University of Louisville",
+  "Nc State": "North Carolina State University", "Mississippi State": "Mississippi State University",
+  "Arizona State": "Arizona State University", "Texas A&M": "Texas A&M University",
+  // Dual entries
+  "LSU / Mariners": "Louisiana State University", "FSU / Athletics": "Florida State University",
+  "Wake Forrest / Twins": "Wake Forest University", "Oklahoma / Red Sox": "University of Oklahoma",
+  "Arizona / Rays": "University of Arizona", "Alabama / Twins": "University of Alabama",
+  "Oregon / Reds": "University of Oregon", "Notre Dame / TCU": "University of Notre Dame",
+};
+
+export function getSchoolLogo(school: string): string | null {
+  const id = ESPN_IDS[school];
+  return id ? `https://a.espncdn.com/i/teamlogos/ncaa/500/${id}.png` : null;
+}
+
+export function getFullSchoolName(school: string): string {
+  return FULL_NAMES[school] || school;
+}
+
+export function getSchoolColor(school: string): string {
+  return SCHOOL_COLORS[school] || "#555";
+}
+
+export function SchoolLogo({ school, size = 32 }: { school: string; size?: number }) {
+  const logo = getSchoolLogo(school);
+  if (logo) {
+    return (
+      <img
+        src={logo}
+        alt={school}
+        style={{ width: size, height: size }}
+        className="object-contain flex-shrink-0"
+      />
+    );
+  }
+  return <SchoolBadge school={school} size={size} />;
+}
 
 export function SchoolBadge({ school, size = 28 }: { school: string; size?: number }) {
   const color = SCHOOL_COLORS[school] || "#555";

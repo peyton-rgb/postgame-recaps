@@ -1,28 +1,23 @@
 "use client";
 
+import { useState, useMemo } from "react";
 import type { Campaign, Athlete, Media } from "@/lib/types";
-import { fmt, pct, computeStats, getBestEngRate, getTotalImpressions, getTotalEngagements } from "@/lib/recap-helpers";
+import { fmt, computeStats } from "@/lib/recap-helpers";
 import { PostgameLogo } from "./PostgameLogo";
-import { TopPerformerMedia } from "./TopPerformerMedia";
-import { SchoolBadge } from "./SchoolBadge";
+import { SchoolLogo, getFullSchoolName, getSchoolColor } from "./SchoolBadge";
 
 // ── Social Links Helper ──────────────────────────────────────
 
 function getSocialLinks(athlete: Athlete) {
   const links: { platform: string; url: string; icon: "ig" | "tiktok" }[] = [];
   const m = athlete.metrics || {};
-
-  // One IG link: prefer post URL, fall back to profile
   const igPostUrl = m.ig_feed?.post_url || m.ig_reel?.post_url;
   if (igPostUrl) {
     links.push({ platform: "Instagram", url: igPostUrl, icon: "ig" });
   } else if (athlete.ig_handle) {
     links.push({ platform: "Instagram", url: `https://instagram.com/${athlete.ig_handle.replace("@", "")}`, icon: "ig" });
   }
-
-  // TikTok post
   if (m.tiktok?.post_url) links.push({ platform: "TikTok", url: m.tiktok.post_url, icon: "tiktok" });
-
   return links;
 }
 
@@ -41,165 +36,187 @@ function SocialIcon({ type, className = "" }: { type: "ig" | "tiktok"; className
   );
 }
 
-// ── Ranked athlete type ──────────────────────────────────────
+// ── Featured Card ────────────────────────────────────────────
 
-type RankedAthlete = Athlete & { bestEngRate: number };
-
-function rankAthletes(athletes: Athlete[], max = 50): RankedAthlete[] {
-  return [...athletes]
-    .map((a) => ({ ...a, bestEngRate: getBestEngRate(a) }))
-    .sort((a, b) => b.bestEngRate - a.bestEngRate)
-    .slice(0, max);
-}
-
-// ── Top 3 Hero Card ──────────────────────────────────────────
-
-function Top3HeroCard({
+function FeaturedCard({
   athlete,
   rank,
   items,
-  isFirst,
 }: {
-  athlete: RankedAthlete;
+  athlete: Athlete;
   rank: number;
   items: Media[];
-  isFirst: boolean;
 }) {
+  const color = getSchoolColor(athlete.school);
+  const firstMedia = items[0];
+  const imgSrc = firstMedia?.thumbnail_url || (firstMedia?.type === "image" ? firstMedia?.file_url : null);
+  const links = getSocialLinks(athlete);
+
   return (
-    <div className={isFirst ? "flex-1 max-w-[340px]" : "flex-1 max-w-[280px]"}>
+    <div className={rank === 1 ? "col-span-1 md:col-span-1" : ""}>
       <div
-        className={`relative rounded-xl overflow-hidden ${
-          isFirst
-            ? "h-[380px] border-2 border-brand shadow-[0_0_24px_rgba(215,63,9,0.35)]"
-            : "h-[320px] border border-white/10"
-        }`}
+        className="relative rounded-2xl overflow-hidden h-[320px] md:h-[420px] border border-white/[0.08] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] group"
+        style={{ "--school-color": color } as React.CSSProperties}
       >
-        {/* Media background */}
-        {items.length > 0 ? (
-          <TopPerformerMedia items={items} name={athlete.name} />
-        ) : (
-          <div className="absolute inset-0 bg-black flex items-center justify-center">
-            <span className="text-[10px] text-white/20 font-bold uppercase">No content</span>
-          </div>
-        )}
+        {/* Background image */}
+        <div className="absolute inset-0">
+          {imgSrc ? (
+            <img src={imgSrc} className="w-full h-full object-cover" alt={athlete.name} />
+          ) : (
+            <div className="w-full h-full bg-black" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/[0.97] via-black/[0.65] to-transparent" />
+        </div>
 
         {/* Rank badge */}
-        <div
-          className={`absolute top-3 left-3 w-10 h-10 rounded-full text-white text-lg font-black flex items-center justify-center z-10 ${
-            isFirst ? "bg-brand" : "bg-white/20 backdrop-blur"
-          }`}
-        >
-          {rank}
+        <div className="absolute top-3.5 left-3.5 w-10 h-10 rounded-xl bg-brand text-white text-base font-black flex items-center justify-center z-10 shadow-[0_4px_16px_rgba(215,63,9,0.4)]">
+          #{rank}
         </div>
 
-        {/* Bottom gradient overlay with info */}
-        <div className="absolute bottom-0 left-0 right-0 z-[5] px-4 pb-4 pt-16 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-          <div className="flex items-center gap-2 mb-1">
-            <SchoolBadge school={athlete.school} size={22} />
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-black uppercase truncate">{athlete.name}</div>
-              <div className="text-[10px] text-white/50 font-semibold flex items-center gap-1.5">
-                {athlete.school}
-                <span className="px-1 py-px rounded text-[7px] font-bold uppercase bg-brand text-white">
-                  {athlete.sport}
-                </span>
-              </div>
+        {/* Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+          {/* Logo + sport row */}
+          <div className="flex items-center gap-2 mb-2.5">
+            <div className="brightness-0 invert opacity-60">
+              <SchoolLogo school={athlete.school} size={28} />
             </div>
+            <span className="px-2.5 py-1 bg-brand/20 text-brand rounded text-[9px] font-extrabold uppercase tracking-wider">
+              {athlete.sport}
+            </span>
           </div>
 
-          {/* Notes */}
+          <div className="text-xl font-black uppercase tracking-tight leading-tight">{athlete.name}</div>
+          <div className="text-[11px] text-white/40 mt-1 font-medium">{getFullSchoolName(athlete.school)}</div>
+
           {athlete.notes && (
-            <p className="text-[10px] text-white/50 leading-tight mt-1.5 line-clamp-2">{athlete.notes}</p>
+            <p className="text-[11px] text-white/30 leading-relaxed mt-1.5 line-clamp-2">{athlete.notes}</p>
           )}
 
-          {/* Social links */}
-          {(() => {
-            const links = getSocialLinks(athlete);
-            return links.length > 0 ? (
-              <div className="flex items-center gap-1.5 mt-2">
-                {links.map((link, i) => (
-                  <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
-                    title={link.platform}>
-                    <SocialIcon type={link.icon} className="text-white/70" />
-                    <span className="text-[8px] font-bold text-white/50">{link.platform === "Instagram" ? "Profile" : link.platform.replace("IG ", "")}</span>
-                  </a>
-                ))}
-              </div>
-            ) : null;
-          })()}
-
-          {/* Metrics row */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-3">
-            <div>
-              <div className="text-[8px] font-bold uppercase tracking-wider text-white/35">Followers</div>
-              <div className="text-xs font-bold text-white/70">{athlete.ig_followers ? fmt(athlete.ig_followers) : "\u2014"}</div>
-            </div>
-            <div>
-              <div className="text-[8px] font-bold uppercase tracking-wider text-white/35">Impressions</div>
-              <div className="text-xs font-bold text-white/70">{fmt(getTotalImpressions(athlete))}</div>
-            </div>
-            <div>
-              <div className="text-[8px] font-bold uppercase tracking-wider text-white/35">Engagements</div>
-              <div className="text-xs font-bold text-white/70">{fmt(getTotalEngagements(athlete))}</div>
-            </div>
-            <div>
-              <div className="text-[8px] font-bold uppercase tracking-wider text-white/35">Eng. Rate</div>
-              <div className={`text-xs font-black ${isFirst ? "text-brand" : "text-white/70"}`}>
-                {pct(athlete.bestEngRate)}
-              </div>
-            </div>
+          {/* Meta row */}
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            {athlete.ig_followers ? (
+              <span className="flex items-center gap-1 text-[11px] font-bold text-white/40">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                {fmt(athlete.ig_followers)}
+              </span>
+            ) : null}
+            <span className="px-2 py-0.5 bg-white/[0.06] border border-white/[0.08] rounded text-[8px] font-bold text-white/45">
+              CVS Top 50
+            </span>
           </div>
+
+          {/* Links */}
+          {links.length > 0 && (
+            <div className="flex gap-1.5 mt-3">
+              {links.map((link, i) => (
+                <a
+                  key={i}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-bold transition-all ${
+                    i === 0
+                      ? "bg-brand/15 text-brand hover:bg-brand/30"
+                      : "bg-white/[0.08] text-white/50 hover:bg-white/[0.15] hover:text-white"
+                  }`}
+                >
+                  <SocialIcon type={link.icon} className="w-[11px] h-[11px]" />
+                  {link.platform === "Instagram" ? "Post" : "TikTok"}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* School color stripe */}
+        <div className="absolute bottom-0 left-0 right-0 h-[3px] z-20" style={{ background: `linear-gradient(to right, ${color}, transparent)` }} />
+
+        {/* Hover border glow */}
+        <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-[var(--school-color)] transition-colors pointer-events-none z-20" />
       </div>
     </div>
   );
 }
 
-// ── Mobile Hero Card ─────────────────────────────────────────
+// ── Roster Card ──────────────────────────────────────────────
 
-function MobileHeroCard({
+function RosterCard({
   athlete,
   rank,
   items,
-  isFirst,
 }: {
-  athlete: RankedAthlete;
+  athlete: Athlete;
   rank: number;
   items: Media[];
-  isFirst: boolean;
 }) {
+  const color = getSchoolColor(athlete.school);
+  const firstMedia = items[0];
+  const thumbSrc = firstMedia?.thumbnail_url || (firstMedia?.type === "image" ? firstMedia?.file_url : null);
+  const links = getSocialLinks(athlete);
+
   return (
-    <div className={isFirst ? "col-span-2" : ""}>
-      <div
-        className={`relative rounded-xl overflow-hidden ${
-          isFirst
-            ? "h-[280px] border-2 border-brand shadow-[0_0_20px_rgba(215,63,9,0.3)]"
-            : "h-[200px] border border-white/10"
-        }`}
-      >
-        {items.length > 0 ? (
-          <TopPerformerMedia items={items} name={athlete.name} />
+    <div
+      className="flex items-center gap-2.5 md:gap-3 py-2.5 md:py-3 pr-4 bg-white/[0.02] border border-white/[0.05] rounded-xl transition-all duration-200 overflow-hidden hover:bg-white/[0.04] group"
+      style={{ "--school-color": color, borderColor: "rgba(255,255,255,0.05)" } as React.CSSProperties}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = color)}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)")}
+    >
+      {/* School color bar */}
+      <div className="w-[3px] self-stretch flex-shrink-0 opacity-35 group-hover:opacity-100 transition-opacity" style={{ background: color }} />
+
+      {/* Rank */}
+      <div className="text-[11px] font-black text-white/10 w-7 text-center flex-shrink-0">#{rank}</div>
+
+      {/* Photo */}
+      <div className="w-11 h-11 md:w-12 md:h-12 rounded-lg overflow-hidden flex-shrink-0 bg-[#111] border border-white/[0.05]">
+        {thumbSrc ? (
+          <img src={thumbSrc} className="w-full h-full object-cover" alt={athlete.name} />
         ) : (
-          <div className="absolute inset-0 bg-black flex items-center justify-center">
-            <span className="text-[10px] text-white/20 font-bold uppercase">No content</span>
-          </div>
+          <div className="w-full h-full bg-[#111]" />
         )}
+      </div>
 
-        <div
-          className={`absolute top-2 left-2 w-8 h-8 rounded-full text-white text-sm font-black flex items-center justify-center z-10 ${
-            isFirst ? "bg-brand" : "bg-white/20 backdrop-blur"
-          }`}
-        >
-          {rank}
+      {/* School logo */}
+      <SchoolLogo school={athlete.school} size={28} />
+
+      {/* Identity: sport stacked above name */}
+      <div className="flex-shrink-0 w-[180px] md:w-[240px] min-w-0">
+        <span className="inline-block px-1.5 py-0.5 bg-brand/12 text-brand rounded text-[8px] font-extrabold uppercase tracking-wider mb-0.5">
+          {athlete.sport}
+        </span>
+        <div className="text-[13px] md:text-sm font-black uppercase tracking-tight leading-tight truncate">{athlete.name}</div>
+        <div className="text-[10px] text-white/25 font-medium truncate">{getFullSchoolName(athlete.school)}</div>
+      </div>
+
+      {/* Notes */}
+      <div className="flex-1 min-w-0 hidden md:block">
+        <p className="text-[11px] text-white/30 leading-relaxed line-clamp-2">{athlete.notes || "Elite collegiate athlete and brand partner."}</p>
+        <div className="flex gap-1 mt-1">
+          <span className="px-2 py-0.5 bg-white/[0.05] border border-white/[0.06] rounded text-[8px] font-bold text-white/40">CVS Top 50</span>
         </div>
+      </div>
 
-        <div className="absolute bottom-0 left-0 right-0 z-[5] px-3 pb-3 pt-12 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-          <div className="text-xs font-black uppercase truncate">{athlete.name}</div>
-          <div className="text-[10px] text-white/50">{athlete.school}</div>
-          <div className={`text-base font-black mt-1 ${isFirst ? "text-brand" : "text-white/70"}`}>
-            {pct(athlete.bestEngRate)}
-          </div>
+      {/* Right: followers + links */}
+      <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+        {athlete.ig_followers ? (
+          <span className="hidden md:flex items-center gap-1 text-[10px] font-bold text-white/25 whitespace-nowrap">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            {fmt(athlete.ig_followers)}
+          </span>
+        ) : null}
+        <div className="flex items-center gap-0.5">
+          {links.map((link, i) => (
+            <a
+              key={i}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[9px] font-bold text-white/20 px-1.5 py-1 rounded transition-all hover:bg-white/[0.08] hover:text-white/60 whitespace-nowrap"
+            >
+              <SocialIcon type={link.icon} className="w-[10px] h-[10px]" />
+              <span className="hidden md:inline">{link.platform === "Instagram" ? "Post" : "TikTok"}</span>
+            </a>
+          ))}
         </div>
       </div>
     </div>
@@ -218,248 +235,154 @@ export function Top50Recap({
   media: Record<string, Media[]>;
 }) {
   const settings = campaign.settings || {};
-  const ranked = rankAthletes(athletes);
-  const top3 = ranked.slice(0, 3);
-  const rest = ranked.slice(3);
   const stats = computeStats(athletes);
+  const [search, setSearch] = useState("");
+  const [sportFilter, setSportFilter] = useState("all");
+
+  // Compute unique sports and universities
+  const sports = useMemo(() => [...new Set(athletes.map((a) => a.sport).filter(Boolean))].sort(), [athletes]);
+  const uniCount = useMemo(() => new Set(athletes.map((a) => a.school)).size, [athletes]);
+
+  const top3 = athletes.slice(0, 3);
+  const rest = athletes.slice(3);
+
+  // Filter roster
+  const filteredRest = useMemo(() => {
+    let list = rest;
+    if (sportFilter !== "all") {
+      list = list.filter((a) => a.sport === sportFilter);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (a) =>
+          a.name.toLowerCase().includes(q) ||
+          a.school.toLowerCase().includes(q) ||
+          (a.sport || "").toLowerCase().includes(q) ||
+          (a.notes || "").toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [rest, sportFilter, search]);
+
+  // Filter featured too
+  const filteredTop3 = useMemo(() => {
+    if (sportFilter === "all" && !search.trim()) return top3;
+    let list = top3;
+    if (sportFilter !== "all") list = list.filter((a) => a.sport === sportFilter);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter((a) => a.name.toLowerCase().includes(q) || a.school.toLowerCase().includes(q));
+    }
+    return list;
+  }, [top3, sportFilter, search]);
 
   return (
-    <div className="recap-container min-h-screen bg-black text-white font-sans">
+    <div className="recap-container min-h-screen bg-[#050505] text-white font-sans">
 
-      {/* ── POSTGAME TOP BAR ───────────────────────────────── */}
-      <div className="px-6 md:px-12 py-3 border-b border-white/5 flex items-center justify-between">
+      {/* ── TOP BAR ───────────────────────────────────────── */}
+      <div className="px-6 md:px-12 py-3.5 border-b border-white/[0.06] flex items-center justify-between sticky top-0 z-50 bg-[#050505]/90 backdrop-blur-xl">
         <PostgameLogo size="sm" className="opacity-50" />
-        <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-white/20">
-          Top 50 Rankings
+        <span className="text-[10px] font-bold uppercase tracking-widest text-white/20">
+          Top 50 Athletes
         </span>
       </div>
 
-      {/* ── HERO HEADER ────────────────────────────────────── */}
-      <div className="relative px-6 md:px-12 pt-8 md:pt-10 pb-8 md:pb-10 bg-gradient-to-b from-white/[0.04] to-black">
-        <div className="flex flex-col gap-5">
-          {/* Brand logo */}
-          {settings.brand_logo_url ? (
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5 md:p-6 inline-flex items-center justify-center self-start">
-              <img src={settings.brand_logo_url} className="h-12 md:h-20 object-contain" alt={campaign.client_name} />
-            </div>
-          ) : campaign.client_logo_url ? (
-            <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-5 md:p-6 inline-flex items-center justify-center self-start">
-              <img src={campaign.client_logo_url} className="h-10 md:h-16 object-contain" alt={campaign.client_name} />
-            </div>
-          ) : null}
-
-          {/* Badges row */}
-          <div className="flex items-center gap-3">
-            <span className="px-3 py-1.5 bg-brand text-white rounded text-[10px] font-black uppercase tracking-wider">
+      {/* ── HERO ──────────────────────────────────────────── */}
+      <div className="relative px-6 md:px-12 pt-12 md:pt-16 pb-10 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(215,63,9,0.08)_0%,transparent_60%)]" />
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="px-4 py-2 bg-brand text-white rounded-md text-[11px] font-black uppercase tracking-widest">
               Top 50
             </span>
             {settings.quarter && (
-              <span className="px-2.5 py-1.5 bg-white/[0.06] border border-white/10 rounded text-[10px] font-bold uppercase tracking-wider text-white/60">
+              <span className="px-3 py-2 bg-white/[0.06] border border-white/10 rounded-md text-[11px] font-bold uppercase tracking-widest text-white/50">
                 {settings.quarter}
               </span>
             )}
           </div>
 
-          <h1 className="text-2xl md:text-4xl font-black uppercase leading-tight">
-            {campaign.name}
+          <h1 className="text-3xl md:text-[52px] font-black uppercase tracking-tight leading-[1.05] mb-4">
+            The <span className="text-brand">Top 50</span>
+            <br />Athletes
           </h1>
 
           {settings.description && (
-            <p className="text-sm md:text-base text-white/40 leading-relaxed max-w-2xl">
-              {settings.description}
-            </p>
+            <p className="text-base text-white/35 max-w-xl leading-relaxed">{settings.description}</p>
           )}
 
-          {/* Tag pills */}
-          {settings.tags && settings.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {settings.tags.map((tag) => (
-                <span key={tag} className="px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-brand/15 text-brand border border-brand/20">
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── AGGREGATE STATS ────────────────────────────────── */}
-      <div className="px-6 md:px-12 py-8 md:py-10 border-t border-white/10">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {[
-            { value: String(stats.athleteCount), label: "ATHLETES" },
-            { value: fmt(stats.totalReach), label: "TOTAL REACH" },
-            { value: fmt(stats.totalImpressions), label: "TOTAL IMPRESSIONS" },
-            { value: fmt(stats.totalEngagements), label: "TOTAL ENGAGEMENTS" },
-            { value: pct(stats.avgEngRate), label: "AVG ENG. RATE" },
-          ].map((m) => (
-            <div key={m.label} className="bg-white/[0.03] border border-white/10 rounded-xl p-4 md:p-5 text-center">
-              <div className="text-xl md:text-2xl font-black text-white mb-1">{m.value}</div>
-              <div className="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-white/40">{m.label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── TOP 3 PODIUM ───────────────────────────────────── */}
-      {top3.length > 0 && (
-        <div className="px-6 md:px-12 py-10 md:py-12 border-t border-white/10">
-          <h2 className="text-lg md:text-xl font-black uppercase tracking-wide mb-8">
-            Top Performers
-          </h2>
-
-          {/* Desktop podium: #2 — #1 — #3 */}
-          <div className="hidden md:flex items-end justify-center gap-4">
-            {top3.length > 1 && (
-              <Top3HeroCard athlete={top3[1]} rank={2} items={media[top3[1].id] || []} isFirst={false} />
-            )}
-            <Top3HeroCard athlete={top3[0]} rank={1} items={media[top3[0].id] || []} isFirst={true} />
-            {top3.length > 2 && (
-              <Top3HeroCard athlete={top3[2]} rank={3} items={media[top3[2].id] || []} isFirst={false} />
-            )}
+          <div className="flex gap-9 mt-8">
+            <div><div className="text-3xl font-black">{stats.athleteCount}</div><div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mt-0.5">Athletes</div></div>
+            <div><div className="text-3xl font-black">{uniCount}</div><div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mt-0.5">Universities</div></div>
+            <div><div className="text-3xl font-black">{sports.length}</div><div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mt-0.5">Sports</div></div>
           </div>
+        </div>
+      </div>
 
-          {/* Mobile: #1 full-width, #2 + #3 side-by-side */}
-          <div className="md:hidden grid grid-cols-2 gap-2">
-            {top3.map((a, i) => (
-              <MobileHeroCard key={a.id} athlete={a} rank={i + 1} items={media[a.id] || []} isFirst={i === 0} />
+      {/* ── FILTER BAR ────────────────────────────────────── */}
+      <div className="px-6 md:px-12 py-4 border-t border-white/[0.06] flex items-center gap-2.5 flex-wrap sticky top-[47px] z-40 bg-[#050505]/92 backdrop-blur-xl">
+        <div className="relative">
+          <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/30" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search athletes..."
+            className="pl-8 pr-3 py-1.5 bg-white/[0.05] border border-white/10 rounded-lg text-white text-[12px] font-medium outline-none w-44 placeholder:text-white/20 focus:border-brand/50"
+          />
+        </div>
+        <button
+          onClick={() => setSportFilter("all")}
+          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+            sportFilter === "all" ? "bg-brand border-brand text-white" : "bg-white/[0.04] border border-white/[0.08] text-white/35 hover:border-white/20 hover:text-white/70"
+          }`}
+        >
+          All
+        </button>
+        {sports.map((s) => (
+          <button
+            key={s}
+            onClick={() => setSportFilter(s)}
+            className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all ${
+              sportFilter === s ? "bg-brand border-brand text-white" : "bg-white/[0.04] border border-white/[0.08] text-white/35 hover:border-white/20 hover:text-white/70"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+
+      {/* ── FEATURED ATHLETES ─────────────────────────────── */}
+      {filteredTop3.length > 0 && (
+        <div className="px-6 md:px-12 pt-7 pb-10">
+          <div className="text-[11px] font-extrabold uppercase tracking-[3px] text-white/20 mb-4">Featured Athletes</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5" style={{ gridTemplateColumns: filteredTop3.length >= 3 ? "1.3fr 1fr 1fr" : undefined }}>
+            {filteredTop3.map((a, i) => (
+              <FeaturedCard key={a.id} athlete={a} rank={i + 1} items={media[a.id] || []} />
             ))}
           </div>
         </div>
       )}
 
-      {/* ── RANKED LIST #4-50 ──────────────────────────────── */}
-      {rest.length > 0 && (
-        <div className="px-6 md:px-12 py-10 md:py-12 border-t border-white/10">
-          <h2 className="text-lg md:text-xl font-black uppercase tracking-wide mb-8">
-            Full Rankings
-          </h2>
+      {/* ── DIVIDER ───────────────────────────────────────── */}
+      <div className="mx-6 md:mx-12 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
 
-          {/* Desktop table */}
-          <div className="hidden md:block overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 w-10">#</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 w-10"></th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30">Athlete</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30">School</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30">Sport</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Followers</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Impressions</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Engagements</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-right">Eng. Rate</th>
-                  <th className="px-3 py-3 text-[9px] font-bold uppercase tracking-wider text-white/30 text-center">Content</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rest.map((a, i) => {
-                  const rank = i + 4;
-                  const firstMedia = (media[a.id] || [])[0];
-                  const thumbSrc = firstMedia?.thumbnail_url || (firstMedia?.type === "image" ? firstMedia?.file_url : null);
-                  const links = getSocialLinks(a);
-                  return (
-                    <tr key={a.id} className="border-b border-white/[0.06] hover:bg-white/[0.02]">
-                      <td className="px-3 py-3 text-sm font-black text-white/30">{rank}</td>
-                      <td className="px-3 py-2">
-                        {thumbSrc ? (
-                          <img src={thumbSrc} className="w-8 h-8 rounded object-cover" alt="" />
-                        ) : (
-                          <SchoolBadge school={a.school} size={32} />
-                        )}
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="text-sm font-black uppercase">{a.name}</div>
-                        {a.ig_handle && <div className="text-[10px] text-white/30">@{a.ig_handle}</div>}
-                        {a.notes && <div className="text-[10px] text-white/40 mt-0.5 max-w-[200px] truncate">{a.notes}</div>}
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="flex items-center gap-2">
-                          <SchoolBadge school={a.school} size={20} />
-                          <span className="text-sm text-white/50">{a.school}</span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3">
-                        <span className="px-2 py-1 rounded text-[9px] font-bold uppercase tracking-wider bg-brand/15 text-brand">
-                          {a.sport}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-sm font-bold text-white/50 text-right">
-                        {a.ig_followers ? fmt(a.ig_followers) : "\u2014"}
-                      </td>
-                      <td className="px-3 py-3 text-sm font-bold text-white/50 text-right">
-                        {fmt(getTotalImpressions(a))}
-                      </td>
-                      <td className="px-3 py-3 text-sm font-bold text-white/50 text-right">
-                        {fmt(getTotalEngagements(a))}
-                      </td>
-                      <td className="px-3 py-3 text-sm font-bold text-brand text-right">
-                        {a.bestEngRate > 0 ? pct(a.bestEngRate) : "\u2014"}
-                      </td>
-                      <td className="px-3 py-3">
-                        <div className="flex items-center justify-center gap-1">
-                          {links.map((link, j) => (
-                            <a key={j} href={link.url} target="_blank" rel="noopener noreferrer"
-                              className="w-6 h-6 rounded flex items-center justify-center bg-white/5 hover:bg-white/15 transition-colors"
-                              title={link.platform}>
-                              <SocialIcon type={link.icon} className="text-white/50 hover:text-white" />
-                            </a>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile compact cards */}
-          <div className="md:hidden space-y-1">
-            {rest.map((a, i) => {
-              const rank = i + 4;
-              const links = getSocialLinks(a);
-              return (
-                <div key={a.id} className="py-3 px-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-black text-white/30 w-7 text-right flex-shrink-0">{rank}</span>
-                    <SchoolBadge school={a.school} size={28} />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-black uppercase truncate">{a.name}</div>
-                      <div className="text-[10px] text-white/40">{a.school} &middot; {a.sport}</div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-sm font-bold text-white/50">{a.ig_followers ? fmt(a.ig_followers) : "\u2014"}</div>
-                      {a.bestEngRate > 0 && (
-                        <div className="text-[10px] font-bold text-brand">{pct(a.bestEngRate)}</div>
-                      )}
-                    </div>
-                  </div>
-                  {/* Notes + social links row */}
-                  {(a.notes || links.length > 0) && (
-                    <div className="flex items-center gap-2 mt-1.5 ml-10">
-                      {a.notes && <span className="text-[10px] text-white/35 truncate flex-1">{a.notes}</span>}
-                      {links.length > 0 && (
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          {links.slice(0, 3).map((link, j) => (
-                            <a key={j} href={link.url} target="_blank" rel="noopener noreferrer"
-                              className="w-5 h-5 rounded flex items-center justify-center bg-white/5">
-                              <SocialIcon type={link.icon} className="text-white/40" />
-                            </a>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+      {/* ── FULL ROSTER ───────────────────────────────────── */}
+      <div className="px-6 md:px-12 pt-9 pb-16">
+        <div className="text-[11px] font-extrabold uppercase tracking-[3px] text-white/20 mb-4">Full Roster</div>
+        <div className="flex flex-col gap-1">
+          {filteredRest.map((a, i) => (
+            <RosterCard key={a.id} athlete={a} rank={i + 4} items={media[a.id] || []} />
+          ))}
         </div>
-      )}
+        {filteredRest.length === 0 && (
+          <div className="text-center py-16 text-white/20 text-sm">No athletes match your search.</div>
+        )}
+      </div>
 
-      {/* ── FOOTER ─────────────────────────────────────────── */}
-      <div className="recap-footer-area px-6 md:px-12 py-8 border-t border-white/10">
+      {/* ── FOOTER ────────────────────────────────────────── */}
+      <div className="recap-footer-area px-6 md:px-12 py-10 border-t border-white/[0.06]">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <PostgameLogo size="sm" className="opacity-30" />
           <div className="flex items-center gap-3">
@@ -472,7 +395,7 @@ export function Top50Recap({
           </div>
         </div>
         <div className="text-center mt-4">
-          <span className="text-[10px] text-white/20 font-bold uppercase tracking-widest">
+          <span className="text-[9px] text-white/15 font-bold uppercase tracking-[4px]">
             Powered by Postgame
           </span>
         </div>
