@@ -602,7 +602,7 @@ export default function CampaignEditor() {
     if (!fileList || fileList.length === 0) return;
     const files = Array.from(fileList).filter((f) => {
       const name = f.name.toLowerCase();
-      return f.type.startsWith("image/") || name.endsWith(".heic") || name.endsWith(".heif");
+      return f.type.startsWith("image/") || f.type.startsWith("video/") || name.endsWith(".heic") || name.endsWith(".heif") || name.endsWith(".mov") || name.endsWith(".mp4");
     });
     if (files.length === 0) return;
 
@@ -611,7 +611,6 @@ export default function CampaignEditor() {
 
     const unmatched: string[] = [];
     let matched = 0;
-    // Track which athletes we've already seen so we only delete existing media on the first file
     const seenAthletes = new Set<string>();
 
     for (let i = 0; i < files.length; i++) {
@@ -623,21 +622,42 @@ export default function CampaignEditor() {
           seenAthletes.add(athlete.id);
         }
 
-        // Append photo after existing media (don't replace)
-        const converted = await convertHeicIfNeeded(file);
-        const path = `${id}/${athlete.id}/${Date.now()}-${converted.name}`;
-        const url = await uploadFile(converted, path);
-        if (url) {
-          const existing = media[athlete.id] || [];
-          const { data } = await supabase
-            .from("media")
-            .insert({ athlete_id: athlete.id, campaign_id: id, type: "image", file_url: url, sort_order: existing.length })
-            .select().single();
-          if (data) {
-            setMedia((prev) => {
-              const current = prev[athlete.id] || [];
-              return { ...prev, [athlete.id]: [...current, data] };
-            });
+        const isVideo = file.type.startsWith("video/") || file.name.toLowerCase().endsWith(".mov") || file.name.toLowerCase().endsWith(".mp4");
+
+        if (isVideo) {
+          // Upload video directly (no thumbnail for bulk uploads)
+          const path = `${id}/${athlete.id}/${Date.now()}-${file.name}`;
+          const url = await uploadFile(file, path);
+          if (url) {
+            const existing = media[athlete.id] || [];
+            const { data } = await supabase
+              .from("media")
+              .insert({ athlete_id: athlete.id, campaign_id: id, type: "video", file_url: url, sort_order: existing.length })
+              .select().single();
+            if (data) {
+              setMedia((prev) => {
+                const current = prev[athlete.id] || [];
+                return { ...prev, [athlete.id]: [...current, data] };
+              });
+            }
+          }
+        } else {
+          // Upload image
+          const converted = await convertHeicIfNeeded(file);
+          const path = `${id}/${athlete.id}/${Date.now()}-${converted.name}`;
+          const url = await uploadFile(converted, path);
+          if (url) {
+            const existing = media[athlete.id] || [];
+            const { data } = await supabase
+              .from("media")
+              .insert({ athlete_id: athlete.id, campaign_id: id, type: "image", file_url: url, sort_order: existing.length })
+              .select().single();
+            if (data) {
+              setMedia((prev) => {
+                const current = prev[athlete.id] || [];
+                return { ...prev, [athlete.id]: [...current, data] };
+              });
+            }
           }
         }
         matched++;
@@ -1085,7 +1105,7 @@ export default function CampaignEditor() {
               onClick={() => {
                 const input = document.createElement("input");
                 input.type = "file";
-                input.accept = "image/*";
+                input.accept = "image/*,video/*,.heic,.heif";
                 input.multiple = true;
                 input.setAttribute("webkitdirectory", "");
                 input.onchange = (ev) => handleBulkUpload((ev.target as HTMLInputElement).files);
@@ -1135,9 +1155,9 @@ export default function CampaignEditor() {
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
-                  <div className="text-sm font-bold text-gray-300 mb-1">Bulk Upload Cover Photos</div>
+                  <div className="text-sm font-bold text-gray-300 mb-1">Bulk Upload Content</div>
                   <div className="text-xs text-gray-500 mb-3">
-                    Drop a folder of images or click to browse. Files are auto-matched to athletes by name.
+                    Drop a folder of images &amp; videos or click to browse. Files are auto-matched to athletes by name.
                   </div>
                   <div className="flex flex-wrap justify-center gap-2 text-[10px] text-gray-600">
                     <span className="px-2 py-1 rounded bg-gray-800/50">✓ &quot;firstname lastname.jpg&quot;</span>
