@@ -194,8 +194,8 @@ export default function BrandKitList() {
                 {/* Top row: logo + name + badge */}
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 bg-gray-900 border border-gray-800 flex items-center justify-center">
-                    {b.logo_url ? (
-                      <img src={b.logo_url as string} alt={b.name} className="w-full h-full object-contain" />
+                    {(b.logo_light_url || b.logo_url) ? (
+                      <img src={(b.logo_light_url || b.logo_url) as string} alt={b.name} className="w-full h-full object-contain p-1" />
                     ) : (
                       <span
                         className="text-[10px] font-black text-white w-full h-full flex items-center justify-center"
