@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createBrowserSupabase } from "@/lib/supabase";
 import type { BrandKit, BrandAsset, Campaign } from "@/lib/types";
 
-type BrandTab = "campaigns" | "brand-kit";
+type BrandTab = "campaigns" | "recaps" | "brand-kit";
 
 interface BrandCampaign {
   id: string;
@@ -346,6 +346,7 @@ export default function BrandKitEditorPage() {
 
   const TABS: { key: BrandTab; label: string }[] = [
     { key: "campaigns", label: "Campaigns" },
+    { key: "recaps", label: "Recaps" },
     { key: "brand-kit", label: "Brand Kit" },
   ];
 
@@ -463,116 +464,115 @@ export default function BrandKitEditorPage() {
 
         {/* ════════════ CAMPAIGNS TAB ════════════ */}
         {activeTab === "campaigns" && (
-          <div className="py-8 space-y-8">
+          <div className="py-8">
             {campaignsLoading ? (
               <div className="text-gray-500 text-center py-20">Loading...</div>
-            ) : brandCampaigns.length === 0 && recaps.length === 0 ? (
+            ) : brandCampaigns.length === 0 ? (
               <div className="text-center py-20">
                 <p className="text-gray-500 mb-2">No campaigns yet for {brand.name}.</p>
               </div>
             ) : (
-              <>
-                {/* Brand Campaigns section */}
-                {brandCampaigns.length > 0 && (
-                  <section>
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">Campaigns</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {brandCampaigns.map((c) => (
-                        <div
-                          key={c.id}
-                          className="p-5 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-black text-white">{c.name}</h3>
-                            <span
-                              className={`text-[10px] font-bold px-2 py-1 rounded ${
-                                c.status === "active"
-                                  ? "bg-green-900/30 text-green-400"
-                                  : "bg-gray-800 text-gray-500"
-                              }`}
-                            >
-                              {c.status === "active" ? "Active" : "Archived"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <span className="text-xs text-gray-500">{formatMonth(c.created_at)}</span>
-                            {c.budget != null && c.budget > 0 && (
-                              <span className="text-xs font-bold text-gray-400">{formatBudget(c.budget)}</span>
-                            )}
-                            {c.has_brief && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-900/30 text-purple-400">Brief</span>
-                            )}
-                            {c.has_tracker && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-900/30 text-blue-400">Tracker</span>
-                            )}
-                            {c.drive_folder_url && (
-                              <a
-                                href={c.drive_folder_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-gray-500 hover:text-white transition-colors"
-                                title="Drive Folder"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-                                </svg>
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {brandCampaigns.map((c) => (
+                  <div
+                    key={c.id}
+                    className="p-5 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-black text-white">{c.name}</h3>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-1 rounded ${
+                          c.status === "active"
+                            ? "bg-green-900/30 text-green-400"
+                            : "bg-gray-800 text-gray-500"
+                        }`}
+                      >
+                        {c.status === "active" ? "Active" : "Archived"}
+                      </span>
                     </div>
-                  </section>
-                )}
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-xs text-gray-500">{formatMonth(c.created_at)}</span>
+                      {c.budget != null && c.budget > 0 && (
+                        <span className="text-xs font-bold text-gray-400">{formatBudget(c.budget)}</span>
+                      )}
+                      {c.has_brief && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-900/30 text-purple-400">Brief</span>
+                      )}
+                      {c.has_tracker && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-900/30 text-blue-400">Tracker</span>
+                      )}
+                      {c.drive_folder_url && (
+                        <a
+                          href={c.drive_folder_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-500 hover:text-white transition-colors"
+                          title="Drive Folder"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-                {/* Recaps section */}
-                {recaps.length > 0 && (
-                  <section>
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">Recaps</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {recaps.map((r) => (
-                        <div
-                          key={r.id}
-                          className="p-5 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-3">
-                            <h3 className="text-base font-black text-white">{r.name}</h3>
-                            <span
-                              className={`text-[10px] font-bold px-2 py-1 rounded ${
-                                r.published
-                                  ? "bg-green-900/30 text-green-400"
-                                  : "bg-gray-800 text-gray-500"
-                              }`}
-                            >
-                              {r.published ? "Published" : "Draft"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-500">{formatMonth(r.created_at)}</span>
-                            <Link
-                              href={`/dashboard/${r.id}`}
-                              className="text-xs font-bold text-[#D73F09] hover:underline"
-                            >
-                              Edit
-                            </Link>
-                            {r.published && r.slug && (
-                              <a
-                                href={`/recap/${r.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-xs font-bold text-gray-500 hover:text-white transition-colors"
-                              >
-                                View Live ↗
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+        {/* ════════════ RECAPS TAB ════════════ */}
+        {activeTab === "recaps" && (
+          <div className="py-8">
+            {campaignsLoading ? (
+              <div className="text-gray-500 text-center py-20">Loading...</div>
+            ) : recaps.length === 0 ? (
+              <div className="text-center py-20">
+                <p className="text-gray-500 mb-2">No recaps yet for {brand.name}.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {recaps.map((r) => (
+                  <div
+                    key={r.id}
+                    className="p-5 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-black text-white">{r.name}</h3>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-1 rounded ${
+                          r.published
+                            ? "bg-green-900/30 text-green-400"
+                            : "bg-gray-800 text-gray-500"
+                        }`}
+                      >
+                        {r.published ? "Published" : "Draft"}
+                      </span>
                     </div>
-                  </section>
-                )}
-              </>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-gray-500">{formatMonth(r.created_at)}</span>
+                      <Link
+                        href={`/dashboard/${r.id}`}
+                        className="text-xs font-bold text-[#D73F09] hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      {r.published && r.slug && (
+                        <a
+                          href={`/recap/${r.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-bold text-gray-500 hover:text-white transition-colors"
+                        >
+                          View Live ↗
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}
