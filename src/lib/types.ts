@@ -22,12 +22,26 @@ export interface KpiTargets {
   other_kpis?: string;
 }
 
+export interface Brand {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  website: string | null;
+  notes: string | null;
+  archived: boolean;
+  created_at: string;
+  admin_brand_id: string | null;
+}
+
 export interface Campaign {
   id: string;
   name: string;
   slug: string;
   client_name: string;
   client_logo_url: string | null;
+  brand_id: string | null;
   created_at: string;
   published: boolean;
   settings: {
