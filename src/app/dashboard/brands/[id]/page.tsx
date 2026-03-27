@@ -5,7 +5,22 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createBrowserSupabase } from "@/lib/supabase";
 import { PostgameLogo } from "@/components/PostgameLogo";
-import type { Brand, Campaign } from "@/lib/types";
+import type { Brand } from "@/lib/types";
+
+interface BrandCampaign {
+  id: string;
+  name: string;
+  status: string | null;
+  created_at: string;
+}
+
+interface CampaignRecap {
+  id: string;
+  name: string;
+  client_name: string | null;
+  published: boolean;
+  created_at: string;
+}
 
 function getInitials(name: string) {
   return name
@@ -135,7 +150,8 @@ export default function BrandDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [brand, setBrand] = useState<Brand | null>(null);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [brandCampaigns, setBrandCampaigns] = useState<BrandCampaign[]>([]);
+  const [campaignRecaps, setCampaignRecaps] = useState<CampaignRecap[]>([]);
   const [assets, setAssets] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"campaigns" | "media-kit">("campaigns");
@@ -149,9 +165,22 @@ export default function BrandDetailPage() {
   }, [id]);
 
   async function loadAll() {
-    const [{ data: brandData }, { data: campaignData }] = await Promise.all([
+    const [
+      { data: brandData },
+      { data: bcData },
+      { data: crData },
+    ] = await Promise.all([
       supabase.from("brands").select("*").eq("id", id).single(),
-      supabase.from("campaigns").select("*").eq("brand_id", id).order("created_at", { ascending: false }),
+      supabase
+        .from("brand_campaigns")
+        .select("id, name, status, created_at")
+        .eq("brand_id", id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("campaign_recaps")
+        .select("id, name, client_name, published, created_at")
+        .eq("brand_id", id)
+        .order("created_at", { ascending: false }),
     ]);
 
     if (!brandData) {
@@ -160,7 +189,8 @@ export default function BrandDetailPage() {
     }
 
     setBrand(brandData);
-    setCampaigns(campaignData || []);
+    setBrandCampaigns(bcData || []);
+    setCampaignRecaps(crData || []);
     setLoading(false);
     loadAssets();
   }
@@ -402,44 +432,83 @@ export default function BrandDetailPage() {
 
         {/* Campaigns tab */}
         {activeTab === "campaigns" && (
-          <div>
-            {campaigns.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-gray-500 mb-2">No campaigns linked to this brand yet.</p>
-                <p className="text-xs text-gray-700">
-                  Link a campaign by setting its brand field in the campaign editor.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {campaigns.map((c) => (
-                  <div
-                    key={c.id}
-                    className="relative p-6 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors group cursor-pointer"
-                    onClick={() => router.push(`/dashboard/${c.id}`)}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                        {c.client_name}
-                      </span>
-                      <span
-                        className={`text-xs font-bold px-2 py-1 rounded ${
-                          c.published
-                            ? "bg-green-900/30 text-green-400"
-                            : "bg-gray-800 text-gray-500"
-                        }`}
+          <div className="space-y-10">
+            {/* Brand Campaigns */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">
+                Brand Campaigns
+              </h3>
+              {brandCampaigns.length === 0 ? (
+                <p className="text-sm text-gray-700 py-4">No brand campaigns linked to this brand.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {brandCampaigns.map((c) => {
+                    const isArchived = c.status === "archived";
+                    return (
+                      <div
+                        key={c.id}
+                        className="p-5 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors"
                       >
-                        {c.published ? "Published" : "Draft"}
-                      </span>
+                        <div className="flex items-center justify-between mb-3">
+                          <span
+                            className={`text-xs font-bold px-2 py-1 rounded ${
+                              isArchived
+                                ? "bg-gray-800 text-gray-600"
+                                : "bg-green-900/30 text-green-400"
+                            }`}
+                          >
+                            {isArchived ? "Archived" : "Active"}
+                          </span>
+                        </div>
+                        <h3 className="text-base font-black mb-2">{c.name}</h3>
+                        <p className="text-xs text-gray-600">
+                          {new Date(c.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Campaign Recaps */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">
+                Campaign Recaps
+              </h3>
+              {campaignRecaps.length === 0 ? (
+                <p className="text-sm text-gray-700 py-4">No campaign recaps linked to this brand.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {campaignRecaps.map((c) => (
+                    <div
+                      key={c.id}
+                      className="p-5 bg-[#111] border border-gray-800 rounded-xl hover:border-gray-600 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/dashboard/${c.id}`)}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                          {c.client_name || "—"}
+                        </span>
+                        <span
+                          className={`text-xs font-bold px-2 py-1 rounded ${
+                            c.published
+                              ? "bg-green-900/30 text-green-400"
+                              : "bg-gray-800 text-gray-500"
+                          }`}
+                        >
+                          {c.published ? "Published" : "Draft"}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-black mb-2">{c.name}</h3>
+                      <p className="text-xs text-gray-600">
+                        {new Date(c.created_at).toLocaleDateString()}
+                      </p>
                     </div>
-                    <h3 className="text-base font-black mb-2">{c.name}</h3>
-                    <p className="text-xs text-gray-600">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
