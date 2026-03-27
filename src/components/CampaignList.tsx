@@ -76,7 +76,8 @@ export default function CampaignList() {
       .from("brand_campaigns")
       .select("id, name, status, created_at")
       .eq("brand_id", brandId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(25);
     setBrandCampaigns(data || []);
   }
 
